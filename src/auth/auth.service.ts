@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { compare } from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { UsersService } from "src/users/users.service";
 import { JwtService } from "@nestjs/jwt";
 import { LoginUser } from "src/dtos/auth/LoginUser.dto";
@@ -19,15 +19,28 @@ export class AuthService {
     ) {};
 
     async login(userData: LoginUser, response: Response) {
-        const user = await this.usersService.getUserByEmail(userData.email);
+        const user = await this.usersService.getActivatedUserByEmail(userData.email);
+        console.log(user);
 
         if (!user) {
             throw new HttpException('Пользователь с такой почтой не найден', HttpStatus.BAD_REQUEST);
         }
 
-        if (!compare(user.password, userData.password)) {
+        console.log('------------------');
+        const passwordsEqual = await bcrypt.compare(userData.password, user.password)
+        console.log(passwordsEqual);
+        console.log('------------------');
+
+        if (!passwordsEqual) {
+            console.log('------------------');
+            console.log('incorrect password');
+            console.log('------------------');
             throw new HttpException(`Неправильный пароль`, HttpStatus.BAD_REQUEST)
         }
+
+        console.log('------------------');
+        console.log('correct password');
+        console.log('------------------');
 
         const accessToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_ACCESS_SECRET_KEY, expiresIn: '20s'});
         const refreshToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_REFRESH_SECRET_KEY, expiresIn: '60s'});

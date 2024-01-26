@@ -18,10 +18,19 @@ export class Users {
   @Column()
   surname: string;
 
-  @Column({
-    unique: true
-  })
+  @Column()
   email: string;
+
+  @Column({
+    nullable: false
+  })
+  activationLink: string;
+
+  @Column({
+    nullable: true,
+    default: null
+  })
+  resetPasswordLink: string | null;
 
   @Column({
     default: false

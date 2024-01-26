@@ -7,6 +7,7 @@ import { APP_GUARD } from '@nestjs/core';
 // import { RolesGuard } from './roles/roles.guard';
 import { AuthModule } from './auth/auth.module';
 import { TokensModule } from './tokens/tokens.module';
+import { SmtpModule } from './smtp/smtp.module';
 
 @Module({
   imports: [
@@ -28,7 +29,8 @@ import { TokensModule } from './tokens/tokens.module';
     UsersModule,
     RolesModule,
     AuthModule,
-    TokensModule
+    TokensModule,
+    SmtpModule
   ]
 })
 export class AppModule {}

@@ -6,4 +6,5 @@ export class CreateUser {
     email: string;
     phoneNumber: string;
     password: string;
+    activationLink?: string;
 }
