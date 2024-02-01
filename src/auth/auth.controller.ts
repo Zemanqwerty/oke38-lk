@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, Req, Res, UseGuards } from "@nestjs
 import { AuthService } from "./auth.service";
 import { LoginUser } from "src/dtos/auth/LoginUser.dto";
 import { Request, Response } from "express";
+import { get } from "http";
 
 
 
@@ -24,6 +25,17 @@ export class AuthController {
         try {
             return await this.authService.refresh(request.cookies['refreshToken'], response)
         } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @Get('logout')
+    async logout(@Req() request: Request) {
+        try {
+            return await this.authService.logout(request.cookies['refreshToken']);
+        } catch (e) {
+            console.log(e);
             return e
         }
     }

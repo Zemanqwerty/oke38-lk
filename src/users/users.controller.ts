@@ -32,7 +32,7 @@ export class UsersController {
     }
 
     @Get('activate/:link')
-    @Redirect('http://localhost:3000/sign-in', 301)
+    @Redirect('http://2.60.115.218:3010/sign-in', 301)
     async activateAccount(@Param() params: any) {
         try {
             return await this.usersService.activateAccount(params.link);

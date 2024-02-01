@@ -41,7 +41,7 @@ export class UsersService {
         const newUser = this.usersRepository.create(userData);
         await this.usersRepository.save(newUser);
 
-        await this.smtpService.sendSmtp(`http://localhost:5010/users/activate/${activationLink}`, newUser.email, 'activation');
+        await this.smtpService.sendSmtp(`http://2.60.115.218:5000/users/activate/${activationLink}`, newUser.email, 'activation');
 
         return new ResponseUser({email: newUser.email});
     }
@@ -78,7 +78,8 @@ export class UsersService {
 
         await this.usersRepository.save(user);
 
-        return {url: 'http://localhost:3000/sign-in'}
+        // return {url: 'http://localhost:3000/sign-in'}
+        return {url: 'http://2.60.115.218:81/sign-in'}
     }
 
     async sendRequestForResetPassword(requestData: RequestForResetPassword) {
@@ -96,7 +97,7 @@ export class UsersService {
 
         await this.usersRepository.save(user);
 
-        return await this.smtpService.sendSmtp(`http://localhost:3000/reset-password/${resetPasswordLink}`, requestData.email, 'reset');
+        return await this.smtpService.sendSmtp(`http://2.60.115.218:81/reset-password/${resetPasswordLink}`, requestData.email, 'reset');
     }
 
     async resetPassword(link: string, resetData: ResetPassword) {

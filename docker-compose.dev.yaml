@@ -1,45 +1,49 @@
 version: '3.1'
 
 services:
-  main-service:
-    image: zemanqwerty/oke-lk-service:main-service
-    ports:
-      - 5010:5010
-    environment:
-      DB_HOST: db
-      DB_PORT: 32700
-      DB_USER: root
-      DB_PASSWORD: root
-      DB_NAME: oke38-lk
-      JWT_ACCESS_SECRET_KEY: developmentSecretKeyAccess
-      JWT_REFRESH_SECRET_KEY: developmentSecretKeyRefresh
-      RABBITMQ_USER: admin
-      RABBITMQ_PASSWORD: admin
-      RABBITMQ_HOST: rabbitmq:5672
-      RABBITMQ_QUEUE_NAME: smtpService
-    restart: unless-stopped
+  # main-service:
+  #   image: zemanqwerty/oke-lk-service:main-service
+  #   ports:
+  #     - 5010:5000
+  #   environment:
+  #     DB_HOST: db
+  #     DB_PORT: 5432
+  #     DB_USER: root
+  #     DB_PASSWORD: root
+  #     DB_NAME: oke38-lk
+  #     JWT_ACCESS_SECRET_KEY: developmentSecretKeyAccess
+  #     JWT_REFRESH_SECRET_KEY: developmentSecretKeyRefresh
+  #     RABBITMQ_USER: admin
+  #     RABBITMQ_PASSWORD: admin
+  #     RABBITMQ_HOST: rabbitmq:5672
+  #     RABBITMQ_QUEUE_NAME: smtpService
+  #   restart: unless-stopped
+    # depends_on:
+    #   - smtp-service
 
-  smtp-service:
-    image: zemanqwerty/oke-lk-service:smtp-service
-    ports:
-      - 5011:5011
-    environment:
-      RABBITMQ_USER: admin
-      RABBITMQ_PASSWORD: admin
-      RABBITMQ_HOST: rabbitmq:5672
-      RABBITMQ_QUEUE_NAME: smtpService
+  # smtp-service:
+  #   image: zemanqwerty/oke-lk-service:smtp-service
+  #   ports:
+  #     - 5011:5011
+  #   environment:
+  #     RABBITMQ_USER: admin
+  #     RABBITMQ_PASSWORD: admin
+  #     RABBITMQ_HOST: rabbitmq:5672
+  #     RABBITMQ_QUEUE_NAME: smtpService
 
-      MAIL_HOST: smtp.mail.ru
-      MAIL_USER: zemanqwerty.smtp@mail.ru
-      MAIL_PASSWORD: 7GZVptRN0jg7TEC8suk8
-      MAIL_FROM: zemanqwerty.smtp@mail.ru
-    restart: unless-stopped
+  #     MAIL_HOST: smtp.mail.ru
+  #     MAIL_USER: zemanqwerty.smtp@mail.ru
+  #     MAIL_PASSWORD: 7GZVptRN0jg7TEC8suk8
+  #     MAIL_FROM: zemanqwerty.smtp@mail.ru
+  #   restart: unless-stopped
+  #   depends_on:
+  #    - db
 
-  web-client:
-    image: zemanqwerty/oke-lk-service:web-client
-    ports:
-      - 3010:3010
-    restart: unless-stopped
+  # web-client:
+  #   image: zemanqwerty/oke-lk-service:web-client
+  #   ports:
+  #     - 3010:3010
+  #   restart: unless-stopped
 
   db:
     image:  postgres:11
@@ -59,19 +63,19 @@ services:
       timeout: 5s
       retries: 5
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    hostname: localhost
-    volumes:
-      - /var/lib/rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin
-    restart: unless-stopped
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   container_name: rabbitmq
+  #   hostname: localhost
+  #   volumes:
+  #     - /var/lib/rabbitmq
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=admin
+  #     - RABBITMQ_DEFAULT_PASS=admin
+  #   restart: unless-stopped
 
 volumes:
   data:

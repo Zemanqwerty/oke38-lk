@@ -22,30 +22,34 @@ export class TokensService {
     ) {};
 
     async saveToken(refreshToken: string, user: Users) {
-        const token = await this.tokensRepositoty.findOne({
-            relations: {
-                user: true,
-            },
-            where: {
-                user: {id: user.id}
+        try {
+            const token = await this.tokensRepositoty.findOne({
+                relations: {
+                    user: true,
+                },
+                where: {
+                    user: {id: user.id}
+                }
+            })
+    
+            // const tokenR = await this.tokensRepositoty.createQueryBuilder("tokens").where(`tokens.user = ${user}`).leftJoinAndSelect('tokens.user', 'user').getOne()
+            console.log(token);
+    
+            if (token) {
+                console.log('token');
+                token.token = refreshToken;
+                await this.tokensRepositoty.save(token);
+                return token
             }
-        })
-
-        // const tokenR = await this.tokensRepositoty.createQueryBuilder("tokens").where(`tokens.user = ${user}`).leftJoinAndSelect('tokens.user', 'user').getOne()
-        console.log(token);
-
-        if (token) {
-            console.log('token');
-            token.token = refreshToken;
-            await this.tokensRepositoty.save(token);
-            return token
+    
+            console.log('not token');
+            const newToken = this.tokensRepositoty.create({token: refreshToken, user: user});
+            await this.tokensRepositoty.save(newToken);
+    
+            return newToken;
+        } catch (e) {
+            console.log(e);
         }
-
-        console.log('not token');
-        const newToken = this.tokensRepositoty.create({token: refreshToken, user: user});
-        await this.tokensRepositoty.save(newToken);
-
-        return newToken;
     }
 
     async verifyRefreshToken(refreshToken: string | undefined): Promise<Payload> {
@@ -64,5 +68,15 @@ export class TokensService {
         } catch {
             throw new UnauthorizedException();
         }
+    }
+
+    async removeToken(refreshToken: string) {
+        const tokenData = await this.tokensRepositoty.findOne({where: {
+            token: refreshToken
+        }});
+
+        await this.tokensRepositoty.delete(tokenData);
+
+        return tokenData
     }
 }

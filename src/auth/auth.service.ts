@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import * as bcrypt from 'bcrypt';
 import { UsersService } from "src/users/users.service";
 import { JwtService } from "@nestjs/jwt";
@@ -42,12 +42,20 @@ export class AuthService {
         console.log('correct password');
         console.log('------------------');
 
-        const accessToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_ACCESS_SECRET_KEY, expiresIn: '20s'});
-        const refreshToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_REFRESH_SECRET_KEY, expiresIn: '60s'});
+        const accessToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_ACCESS_SECRET_KEY, expiresIn: '20m'});
+        const refreshToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_REFRESH_SECRET_KEY, expiresIn: '30d'});
 
-        await this.tokensService.saveToken(refreshToken, user);
+        const savedRefreshToken = await this.tokensService.saveToken(refreshToken, user);
+        
+        console.log(`THIS REFRESHTOKEN SETTED AFTER LOGIN - ${refreshToken}`);
 
-        response.cookie('refreshToken', refreshToken, {httpOnly: true});
+        response.cookie('refreshToken', refreshToken, {
+            // domain: 'localhost',
+            httpOnly: true,
+            // sameSite: 'none',
+            secure: false,
+            maxAge: 1000 * 60 * 60 * 24 * 30,
+        });
 
         return new ResponseAuth({accessToken: accessToken, refreshToken: refreshToken, email: user.email});
     }
@@ -57,13 +65,29 @@ export class AuthService {
 
         const user = await this.usersService.getUserByEmail(payload.publickUserEmail)
 
-        const newAccessToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_ACCESS_SECRET_KEY, expiresIn: '20s'});
-        const NewRefreshToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_REFRESH_SECRET_KEY, expiresIn: '60s'});
+        const newAccessToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_ACCESS_SECRET_KEY, expiresIn: '20m'});
+        const NewRefreshToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_REFRESH_SECRET_KEY, expiresIn: '30d'});
         
-        await this.tokensService.saveToken(NewRefreshToken, user);
+        const savedRefreshToken = await this.tokensService.saveToken(NewRefreshToken, user);
 
-        response.cookie('refreshToken', NewRefreshToken, {httpOnly: true});
+        response.cookie('refreshToken', NewRefreshToken, {
+            // domain: 'localhost',
+            httpOnly: true,
+            // sameSite: 'none',
+            secure: false,
+            maxAge: 1000 * 60 * 60 * 24 * 30,
+        });
         
         return new ResponseAuth({accessToken: newAccessToken, refreshToken: NewRefreshToken, email: user.email});
+    }
+
+    async logout(refreshToken: string | undefined) {
+        if (!refreshToken) {
+            throw new UnauthorizedException();
+        }
+
+        const removedToken = await this.tokensService.removeToken(refreshToken);
+
+        return removedToken.user;
     }
 }
