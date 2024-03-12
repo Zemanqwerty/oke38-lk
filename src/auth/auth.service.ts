@@ -81,11 +81,12 @@ export class AuthService {
         return new ResponseAuth({accessToken: newAccessToken, refreshToken: NewRefreshToken, email: user.email});
     }
 
-    async logout(refreshToken: string | undefined) {
+    async logout(refreshToken: string | undefined, response: Response) {
         if (!refreshToken) {
             throw new UnauthorizedException();
         }
 
+        response.clearCookie('refreshToken');
         const removedToken = await this.tokensService.removeToken(refreshToken);
 
         return removedToken.user;

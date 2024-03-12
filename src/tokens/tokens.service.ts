@@ -53,6 +53,7 @@ export class TokensService {
     }
 
     async verifyRefreshToken(refreshToken: string | undefined): Promise<Payload> {
+        console.log(refreshToken);
         if (!refreshToken) {
             throw new UnauthorizedException();
         }
@@ -75,7 +76,7 @@ export class TokensService {
             token: refreshToken
         }});
 
-        await this.tokensRepositoty.delete(tokenData);
+        await this.tokensRepositoty.remove(tokenData);
 
         return tokenData
     }

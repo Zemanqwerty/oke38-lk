@@ -1,3 +1,4 @@
+import { Applications } from 'src/applications/applications.entity';
 import { Role } from 'src/roles/roles.enum';
 import { ManyToMany, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
@@ -47,6 +48,9 @@ export class Users {
     default: Role.Client
   })
   roles: Role;
+
+  @OneToMany(() => Applications, (application) => application.user, {cascade: true})
+  applications: Applications[]
 
   @CreateDateColumn()
   createdAt: Date;

@@ -8,6 +8,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { TokensModule } from './tokens/tokens.module';
 import { SmtpModule } from './smtp/smtp.module';
+import { ApplicationsModule } from './applications/applications.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -30,7 +32,9 @@ import { SmtpModule } from './smtp/smtp.module';
     RolesModule,
     AuthModule,
     TokensModule,
-    SmtpModule
+    SmtpModule,
+    ApplicationsModule,
+    FilesModule
   ]
 })
 export class AppModule {}

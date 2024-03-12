@@ -31,9 +31,9 @@ export class AuthController {
     }
 
     @Get('logout')
-    async logout(@Req() request: Request) {
+    async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
         try {
-            return await this.authService.logout(request.cookies['refreshToken']);
+            return await this.authService.logout(request.cookies['refreshToken'], response);
         } catch (e) {
             console.log(e);
             return e

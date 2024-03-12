@@ -41,13 +41,18 @@ export class UsersService {
         const newUser = this.usersRepository.create(userData);
         await this.usersRepository.save(newUser);
 
-        await this.smtpService.sendSmtp(`http://2.60.115.218:5000/users/activate/${activationLink}`, newUser.email, 'activation');
+        await this.smtpService.sendSmtp(`http://${process.env.BASE_BACKEND_URL}/users/activate/${activationLink}`, newUser.email, 'activation');
 
         return new ResponseUser({email: newUser.email});
     }
 
     async getUserByEmail(email: string): Promise<Users> {
-        return await this.usersRepository.findOneBy({email: email});
+        return await this.usersRepository.findOne({
+            where: {
+                email: email,
+                isActive: true,
+            }
+        })
     }
 
     async getActivatedUserByEmail(email: string): Promise<Users> {
@@ -78,8 +83,7 @@ export class UsersService {
 
         await this.usersRepository.save(user);
 
-        // return {url: 'http://localhost:3000/sign-in'}
-        return {url: 'http://2.60.115.218:81/sign-in'}
+        return {url: `http://${process.env.BASE_CLIENT_URL}/sign-in`}
     }
 
     async sendRequestForResetPassword(requestData: RequestForResetPassword) {
@@ -97,7 +101,7 @@ export class UsersService {
 
         await this.usersRepository.save(user);
 
-        return await this.smtpService.sendSmtp(`http://2.60.115.218:81/reset-password/${resetPasswordLink}`, requestData.email, 'reset');
+        return await this.smtpService.sendSmtp(`http://${process.env.BASE_CLIENT_URL}/reset-password/${resetPasswordLink}`, requestData.email, 'reset');
     }
 
     async resetPassword(link: string, resetData: ResetPassword) {
