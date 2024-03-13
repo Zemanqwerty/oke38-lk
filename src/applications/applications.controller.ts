@@ -34,6 +34,7 @@ export class ApplicationsController {
       ], {
         storage: diskStorage({
             destination: (req, file, callback) => {
+                console.log(123);
               const user: Payload = req['user'];
               const destination = `./files/${user.publickUserEmail}`;
               fs.mkdirSync(destination, {recursive: true});

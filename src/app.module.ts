@@ -10,12 +10,18 @@ import { TokensModule } from './tokens/tokens.module';
 import { SmtpModule } from './smtp/smtp.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { FilesModule } from './files/files.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '/'),
+      serveRoot: '/',
     }),
 
     TypeOrmModule.forRoot({
