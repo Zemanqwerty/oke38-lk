@@ -57,7 +57,7 @@ export class AuthService {
             maxAge: 1000 * 60 * 60 * 24 * 30,
         });
 
-        return new ResponseAuth({accessToken: accessToken, refreshToken: refreshToken, email: user.email});
+        return new ResponseAuth({accessToken: accessToken, role: user.roles, email: user.email});
     }
 
     async refresh(refsreshToken: string | undefined, response: Response) {
@@ -78,7 +78,7 @@ export class AuthService {
             maxAge: 1000 * 60 * 60 * 24 * 30,
         });
         
-        return new ResponseAuth({accessToken: newAccessToken, refreshToken: NewRefreshToken, email: user.email});
+        return new ResponseAuth({accessToken: newAccessToken, role: user.roles, email: user.email});
     }
 
     async logout(refreshToken: string | undefined, response: Response) {

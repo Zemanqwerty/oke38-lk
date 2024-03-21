@@ -10,6 +10,7 @@ import { SmtpService } from "src/smtp/smtp.service";
 import {v4 as uuidv4} from 'uuid';
 import { ResetPassword } from "src/dtos/users/ResetPassword.dto";
 import { RequestForResetPassword } from "src/dtos/users/RequestForResetPassword.dto";
+import { Role } from "src/roles/roles.enum";
 
 
 @Injectable()
@@ -119,5 +120,34 @@ export class UsersService {
         await this.usersRepository.save(user);
 
         return {message: 'Устоновлен новый пароль'};
+    }
+
+    async onModuleInit() {
+        const adminCondidate = await this.usersRepository.findOne({where: {
+            roles: Role.Admin,
+            email: process.env.BASE_ADMIN_EMAIL,
+        }})
+
+        if (adminCondidate) {
+            return
+        }
+
+        const adminHashedPassword = await bcrypt.hash(process.env.BASE_ADMIN_PASSWORD, 10);
+        
+        const baseAdmin = this.usersRepository.create({
+            type: '',
+            lastname: '',
+            firstname: '',
+            surname: '',
+            email: process.env.BASE_ADMIN_EMAIL,
+            isActive: true,
+            phoneNumber: '',
+            password: adminHashedPassword,
+            roles: Role.Admin,
+            activationLink: ''
+        });
+
+        await this.usersRepository.save(baseAdmin);
+        console.log('BASE ADMIN CREATED');
     }
 }
