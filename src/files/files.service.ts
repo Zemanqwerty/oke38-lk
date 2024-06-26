@@ -13,6 +13,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Files } from "./Files.entity";
 import { Repository } from "typeorm";
 import { Applications } from "src/applications/applications.entity";
+import { time } from "console";
 
 
 
@@ -38,16 +39,26 @@ export class FilesService {
         }
     }
 
-    async getFilesByApplication(id: number) {
+    async getFilesByApplication(uuid: string) {
         return await this.filesRepository.find({
             relations: {
                 application: true
             },
             where: {
                 application: {
-                    id: id
+                    uuid: uuid
                 }
             }
         })
+    }
+
+    async deleteFilesById(fileId: number) {
+        const file = await this.filesRepository.findOne({
+            where: {
+                id: fileId
+            }
+        });
+
+        return await this.filesRepository.remove(file);
     }
 }

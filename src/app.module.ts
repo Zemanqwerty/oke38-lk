@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { UserTypesModule } from './user-types/user-types.module';
+import { UserRolesModule } from './user-roles/user-roles.module';
+import { FilialsModule } from './filials/filials.module';
 import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { ConfigModule } from '@nestjs/config';
@@ -12,6 +15,10 @@ import { ApplicationsModule } from './applications/applications.module';
 import { FilesModule } from './files/files.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ChatModule } from './chat/chat.module';
+import { MessagesModule } from './messages/messages.module';
+// import { MesasgesFilesModule } from './mesasges-files/mesasges-files.module';
+import { ApplicationTypeModule } from './application-type/application-type.module';
 
 @Module({
   imports: [
@@ -34,13 +41,21 @@ import { join } from 'path';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    ChatModule,
+    UserTypesModule,
+    UserRolesModule,
+    FilialsModule,
     UsersModule,
     RolesModule,
     AuthModule,
     TokensModule,
     SmtpModule,
     ApplicationsModule,
-    FilesModule
+    FilesModule,
+    ChatModule,
+    MessagesModule,
+    ApplicationTypeModule,
+    // MesasgesFilesModule
   ]
 })
 export class AppModule {}

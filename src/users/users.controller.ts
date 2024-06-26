@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Param, Post, Redirect, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, Redirect, Req, UseGuards } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUser } from "src/dtos/users/CreateUser.dto";
 import { AuthGuard } from "src/auth/auth.middleware";
 import { RequestForResetPassword } from "src/dtos/users/RequestForResetPassword.dto";
 import { ResetPassword } from "src/dtos/users/ResetPassword.dto";
+import { Request } from "express";
+import { SetUserData } from "src/dtos/users/SetUserData.dto";
 
 
 
@@ -12,24 +14,24 @@ export class UsersController {
     constructor(private readonly usersService: UsersService) {};
 
     @Post('sign-up')
-    async createNewUser(@Body() userData: CreateUser) {
+    async createNewUser(@Body() userData: CreateUser, @Req() request: Request) {
         try {
-            return await this.usersService.createNewUser(userData);
+            return await this.usersService.createNewUser(userData, request.ip);
         } catch (e) {
             console.log(e);
             return e
         }
     }
 
-    @UseGuards(AuthGuard)
-    @Get('role')
-    async getRole(@Req() request: Request) {
-        try {
-            return await this.usersService.getRoleByEmail(request['user']);
-        } catch (e) {
-            return e
-        }
-    }
+    // @UseGuards(AuthGuard)
+    // @Get('role')
+    // async getRole(@Req() request: Request) {
+    //     try {
+    //         return await this.usersService.getRoleByEmail(request['user']);
+    //     } catch (e) {
+    //         return e
+    //     }
+    // }
 
     @Get('activate/:link')
     @Redirect(`http://${process.env.BASE_CLIENT_URL}/sign-in`, 301)
@@ -42,9 +44,9 @@ export class UsersController {
     }
 
     @Post('request-for-reset')
-    async sendRequestForResetPassword(@Body() requestData: RequestForResetPassword) {
+    async sendRequestForResetPassword(@Body() requestData: RequestForResetPassword, @Req() request: Request) {
         try {
-            return await this.usersService.sendRequestForResetPassword(requestData);
+            return await this.usersService.sendRequestForResetPassword(requestData, request.ip);
         } catch (e) {
             return e
         }
@@ -55,6 +57,72 @@ export class UsersController {
         try {
             return await this.usersService.resetPassword(params.link, resetData);
         } catch (e) {
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('admin/all')
+    async getAll(@Req() request: Request, @Query('page') page: number) {
+        try {
+            return await this.usersService.getAll(page, request['user'])
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post('admin/create')
+    async adminCreateNewUser(@Req() request: Request, @Body() userData: CreateUser) {
+        try {
+            return await this.usersService.adminCreateNewUser(userData, request['user'])
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post('admin/setRole')
+    async adminSetUserRole(@Req() request: Request, @Body() setRoleData: SetUserData) {
+        try {
+            return await this.usersService.adminSetUserRole(request['user'], setRoleData)
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post('admin/setName')
+    async adminSetUserName(@Req() request: Request, @Body() setNameData: SetUserData) {
+        try {
+            return await this.usersService.adminSetNameRole(request['user'], setNameData)
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post('admin/setPhoneNumber')
+    async adminSetUserPhoneNumber(@Req() request: Request, @Body() setPhoneNumberData: SetUserData) {
+        try {
+            return await this.usersService.adminSetPhoneNumberRole(request['user'], setPhoneNumberData)
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post('admin/delete')
+    async adminDeleteUser(@Req() request: Request, @Body() deleteData: SetUserData) {
+        try {
+            return await this.usersService.adminDeleteUser(request['user'], deleteData)
+        } catch (e) {
+            console.log(e);
             return e
         }
     }

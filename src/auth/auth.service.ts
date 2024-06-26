@@ -42,8 +42,9 @@ export class AuthService {
         console.log('correct password');
         console.log('------------------');
 
-        const accessToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_ACCESS_SECRET_KEY, expiresIn: '20m'});
-        const refreshToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_REFRESH_SECRET_KEY, expiresIn: '30d'});
+
+        const accessToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.id_userrole.caption_userrole}, {secret: process.env.JWT_ACCESS_SECRET_KEY, expiresIn: '20m'});
+        const refreshToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.id_userrole.caption_userrole}, {secret: process.env.JWT_REFRESH_SECRET_KEY, expiresIn: '30d'});
 
         const savedRefreshToken = await this.tokensService.saveToken(refreshToken, user);
         
@@ -57,16 +58,16 @@ export class AuthService {
             maxAge: 1000 * 60 * 60 * 24 * 30,
         });
 
-        return new ResponseAuth({accessToken: accessToken, role: user.roles, email: user.email});
+        return new ResponseAuth({accessToken: accessToken, role: user.id_userrole.caption_userrole, email: user.email});
     }
 
     async refresh(refsreshToken: string | undefined, response: Response) {
         const payload = await this.tokensService.verifyRefreshToken(refsreshToken);
 
-        const user = await this.usersService.getUserByEmail(payload.publickUserEmail)
+        const user = await this.usersService.getActivatedUserByEmail(payload.publickUserEmail)
 
-        const newAccessToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_ACCESS_SECRET_KEY, expiresIn: '20m'});
-        const NewRefreshToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.roles}, {secret: process.env.JWT_REFRESH_SECRET_KEY, expiresIn: '30d'});
+        const newAccessToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.id_userrole.caption_userrole}, {secret: process.env.JWT_ACCESS_SECRET_KEY, expiresIn: '20m'});
+        const NewRefreshToken = await this.jwtService.signAsync({publickUserEmail: user.email, publickUserRoles: user.id_userrole.caption_userrole}, {secret: process.env.JWT_REFRESH_SECRET_KEY, expiresIn: '30d'});
         
         const savedRefreshToken = await this.tokensService.saveToken(NewRefreshToken, user);
 
@@ -78,7 +79,7 @@ export class AuthService {
             maxAge: 1000 * 60 * 60 * 24 * 30,
         });
         
-        return new ResponseAuth({accessToken: newAccessToken, role: user.roles, email: user.email});
+        return new ResponseAuth({accessToken: newAccessToken, role: user.id_userrole.caption_userrole, email: user.email});
     }
 
     async logout(refreshToken: string | undefined, response: Response) {

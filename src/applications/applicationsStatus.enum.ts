@@ -1,6 +1,6 @@
 export enum ApplicationStatus {
-    inProcess = 'В процессе',
     accepted = 'Принята',
+    inProcess = 'В процессе',
     cancled = 'Отклонена',
     finished = 'Завершена'
 }

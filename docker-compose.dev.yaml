@@ -46,16 +46,16 @@ services:
   #   restart: unless-stopped
 
   db:
-    image:  postgres:11
+    image:  postgres:16
     ports:
       - 32700:5432
     volumes:
       - data:/var/lib/postgresql/data
-    command: postgres -c stats_temp_directory=/tmp
+    # command: postgres -c stats_temp_directory=/tmp
     environment:
-      POSTGRES_USER: root
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
-      POSTGRES_DB: oke38-lk
+      POSTGRES_DB: perscab
     restart: unless-stopped
     healthcheck:
       test: "pg_isready -h db"

@@ -28,7 +28,7 @@ export class TokensService {
                     user: true,
                 },
                 where: {
-                    user: {id: user.id}
+                    user: {id_user: user.id_user}
                 }
             })
     

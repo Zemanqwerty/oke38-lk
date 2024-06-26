@@ -11,6 +11,12 @@ import {v4 as uuidv4} from 'uuid';
 import { ResetPassword } from "src/dtos/users/ResetPassword.dto";
 import { RequestForResetPassword } from "src/dtos/users/RequestForResetPassword.dto";
 import { Role } from "src/roles/roles.enum";
+import { Request } from "express";
+import { AllUsersResponse } from "src/dtos/users/AllUsersResponse";
+import { SetUserData } from "src/dtos/users/SetUserData.dto";
+import { UserRolesService } from "src/user-roles/user-roles.service";
+import { UserTypesService } from "src/user-types/user-types.service";
+import { FilialService } from "src/filials/filials.service";
 
 
 @Injectable()
@@ -18,10 +24,14 @@ export class UsersService {
     constructor(
         @InjectRepository(Users)
         private usersRepository: Repository<Users>,
-        private smtpService: SmtpService
+        private smtpService: SmtpService,
+        private userRolesService: UserRolesService,
+        private userTypesService: UserTypesService,
+        private filialService: FilialService
     ) {};
 
-    async createNewUser(userData: CreateUser): Promise<ResponseUser> {
+    async createNewUser(userData: CreateUser, ip: string): Promise<ResponseUser> {
+        console.log(ip);
         const condidate = await this.usersRepository.findOne({where: {
             email: userData.email,
             isActive: true
@@ -31,12 +41,17 @@ export class UsersService {
             throw new HttpException('Пользователь с такой почтой уже зарегистрирован', HttpStatus.BAD_REQUEST);
         }
 
+        userData.id_userrole = await this.userRolesService.getRoleByCaption('заявитель');
+        userData.id_usertype = await this.userTypesService.getUserTypeByCaption('физическое лицо');
+        userData.id_filial = await this.filialService.getFilialByCaption(' ')
+
+
         userData.password = await bcrypt.hash(userData.password, 10);
 
         const activationLink = uuidv4();
 
         userData.activationLink = activationLink;
-
+        
         console.log(userData);
 
         const newUser = this.usersRepository.create(userData);
@@ -57,18 +72,25 @@ export class UsersService {
     }
 
     async getActivatedUserByEmail(email: string): Promise<Users> {
-        return await this.usersRepository.findOne({where: {
-            email: email,
-            isActive: true
-        }})
+        return await this.usersRepository.findOne({
+            relations: {
+                id_userrole: true,
+                id_usertype: true,
+                id_filial: true
+            },
+            where: {
+                email: email,
+                isActive: true
+            }
+        })
     }
 
-    async getUserById(userId: number) {
-        return await this.usersRepository.findOneBy({id: userId});
+    async getUserById(userId: string) {
+        return await this.usersRepository.findOneBy({id_user: userId});
     }
 
     async getRoleByEmail(user: Payload) {
-        return (await this.usersRepository.findOneBy({email: user.publickUserEmail})).roles;
+        return (await this.usersRepository.findOneBy({email: user.publickUserEmail})).id_userrole;
     }
 
     async activateAccount(link: string) {
@@ -87,7 +109,8 @@ export class UsersService {
         return {url: `http://${process.env.BASE_CLIENT_URL}/sign-in`}
     }
 
-    async sendRequestForResetPassword(requestData: RequestForResetPassword) {
+    async sendRequestForResetPassword(requestData: RequestForResetPassword, ip: string) {
+        console.log(ip);
         const user = await this.usersRepository.findOne({where: {
             email: requestData.email
         }});
@@ -122,32 +145,158 @@ export class UsersService {
         return {message: 'Устоновлен новый пароль'};
     }
 
-    async onModuleInit() {
-        const adminCondidate = await this.usersRepository.findOne({where: {
-            roles: Role.Admin,
-            email: process.env.BASE_ADMIN_EMAIL,
-        }})
+    async getAll(pageNumber: number, userData: Payload) {
+        const user = await this.getUserByEmail(userData.publickUserEmail);
 
-        if (adminCondidate) {
-            return
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
+        };
+
+        const skip = (pageNumber - 1) * 20;
+        const take = 20;
+
+        const users = await this.usersRepository.find({
+            where: {
+                isActive: true
+            },
+            order: { date_create_user: 'DESC' },
+            skip,
+            take
+        })
+
+        return users.map((oneUser) => {
+            return new AllUsersResponse(oneUser);
+        })
+    }
+
+    async adminCreateNewUser(userData: CreateUser, creator: Payload) {
+        const user = await this.getUserByEmail(creator.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+          throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY);
+        }
+    
+        const condidate = await this.usersRepository.findOne({where: {
+            email: userData.email,
+            isActive: true
+        }});
+
+        if (condidate) {
+            throw new HttpException('Пользователь с такой почтой уже зарегистрирован', HttpStatus.BAD_REQUEST);
         }
 
-        const adminHashedPassword = await bcrypt.hash(process.env.BASE_ADMIN_PASSWORD, 10);
-        
-        const baseAdmin = this.usersRepository.create({
-            type: '',
-            lastname: '',
-            firstname: '',
-            surname: '',
-            email: process.env.BASE_ADMIN_EMAIL,
-            isActive: true,
-            phoneNumber: '',
-            password: adminHashedPassword,
-            roles: Role.Admin,
-            activationLink: ''
-        });
+        userData.password = await bcrypt.hash(userData.password, 10);
+        userData.isActive = true;
 
-        await this.usersRepository.save(baseAdmin);
-        console.log('BASE ADMIN CREATED');
+        const activationLink = '';
+
+        console.log(user);
+
+        userData.activationLink = activationLink;
+
+        console.log(userData);
+
+        const newUser = this.usersRepository.create(userData);
+        return await this.usersRepository.save(newUser);
+    }
+
+    async adminSetUserRole(userData: Payload, setData: SetUserData) {
+        const creator = await this.getUserByEmail(userData.publickUserEmail);
+    
+        if (creator.id_userrole.caption_userrole !== Role.Admin) {
+          throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY);
+        }
+
+        const user = await this.getUserByEmail(setData.email);
+        
+        if (!user) {
+            throw new HttpException('Пользователь с такой почтой незарегистрирован', HttpStatus.BAD_REQUEST)
+        }
+
+        // FIX
+        user.id_userrole.caption_userrole = setData.role;
+
+        return await this.usersRepository.save(user);
+    }
+
+    async adminSetNameRole(userData: Payload, setData: SetUserData) {
+        const creator = await this.getUserByEmail(userData.publickUserEmail);
+    
+        if (creator.id_userrole.caption_userrole !== Role.Admin) {
+          throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY);
+        }
+
+        const user = await this.getUserByEmail(setData.email);
+        
+        if (!user) {
+            throw new HttpException('Пользователь с такой почтой незарегистрирован', HttpStatus.BAD_REQUEST)
+        }
+
+        user.firstname = setData.firstName;
+        user.lastname = setData.lastName;
+        user.surname = setData.surname;
+
+        return await this.usersRepository.save(user);
+    }
+
+    async adminSetPhoneNumberRole(userData: Payload, setRoleData: SetUserData) {
+        const creator = await this.getUserByEmail(userData.publickUserEmail);
+    
+        if (creator.id_userrole.caption_userrole !== Role.Admin) {
+          throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY);
+        }
+
+        const user = await this.getUserByEmail(setRoleData.email);
+        
+        if (!user) {
+            throw new HttpException('Пользователь с такой почтой незарегистрирован', HttpStatus.BAD_REQUEST)
+        }
+
+        user.phoneNumber = setRoleData.phoneNumber;
+
+        return await this.usersRepository.save(user);
+    }
+
+    async adminDeleteUser(userData: Payload, deleteData: SetUserData) {
+        const creator = await this.getUserByEmail(userData.publickUserEmail);
+    
+        if (creator.id_userrole.caption_userrole !== Role.Admin) {
+          throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY);
+        }
+
+        const user = await this.getUserByEmail(deleteData.email);
+        
+        if (!user) {
+            throw new HttpException('Пользователь с такой почтой незарегистрирован', HttpStatus.BAD_REQUEST)
+        }
+
+        console.log('try to delete');
+        return await this.usersRepository.remove(user);
+    }
+
+    async onModuleInit() {
+        try {
+            const adminRole = await this.userRolesService.getRoleByCaption(Role.Admin)
+            const adminType = await this.userTypesService.getUserTypeByCaption('физическое лицо')
+            const adminFilial = await this.filialService.getFilialByCaption(' ')
+
+            const adminHashedPassword = await bcrypt.hash(process.env.BASE_ADMIN_PASSWORD, 10);
+            
+            const baseAdmin = this.usersRepository.create({
+                id_usertype: adminType,
+                email: process.env.BASE_ADMIN_EMAIL,
+                isActive: true,
+                password: adminHashedPassword,
+                id_userrole: adminRole,
+                id_filial: adminFilial,
+                user_login: 'admin'
+            });
+
+            await this.usersRepository.save(baseAdmin);
+            console.log('BASE ADMIN CREATED');
+        } catch (e) {
+            console.log(e);
+        }
+        return
     }
 }

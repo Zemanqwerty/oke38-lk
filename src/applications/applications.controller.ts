@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Redirect, Req, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Query, Redirect, Req, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
 import { CreateUser } from "src/dtos/users/CreateUser.dto";
 import { AuthGuard } from "src/auth/auth.middleware";
 import { RequestForResetPassword } from "src/dtos/users/RequestForResetPassword.dto";
@@ -9,11 +9,14 @@ import { Express } from 'express';
 import { FileFieldsInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { ApplicationFiles } from "src/dtos/applications/ApplicationFiles.dto";
+import { Request } from 'express';
 
 import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import { Payload } from "src/dtos/auth/Payload.dto";
+import { SetApplicationFilial } from "src/dtos/applications/SetApplicationFilial.dto";
+import { SetApplicationNumberStatus } from "src/dtos/applications/SetApplicationNumberStatus";
 
 
 
@@ -34,7 +37,6 @@ export class ApplicationsController {
       ], {
         storage: diskStorage({
             destination: (req, file, callback) => {
-                console.log(123);
               const user: Payload = req['user'];
               const destination = `./files/${user.publickUserEmail}`;
               fs.mkdirSync(destination, {recursive: true});
@@ -52,6 +54,62 @@ export class ApplicationsController {
             console.log(files);
             console.log(applicationData);
             return await this.applicationsService.create(request['user'], files, applicationData);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post(':uuid/addFiles')
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'applicationCopy', maxCount: 2 },
+        { name: 'passportCopy', maxCount: 2 },
+        { name: 'planeCopy', maxCount: 2 },
+        { name: 'ownDocsCopy', maxCount: 2 },
+        { name: 'powerOfAttorneyCopy', maxCount: 2 },
+        { name: 'constituentDocsCopy', maxCount: 2 },
+        { name: 'otherDocs', maxCount: 5 },
+      ], {
+        storage: diskStorage({
+            destination: (req, file, callback) => {
+              const user: Payload = req['user'];
+              const destination = `./files/${user.publickUserEmail}`;
+              fs.mkdirSync(destination, {recursive: true});
+              callback(null, destination);
+            },
+            filename: (req, file, callback) => {
+              const uniqueSuffix = Date.now() + '-' + uuidv4();
+              callback(null, `${uniqueSuffix}__${file.originalname}`);
+            },
+          })
+      })
+    )
+    async addApplicationFiles(@Req() request: Request, @UploadedFiles() files: ApplicationFiles, @Param() params: any) {
+        try {
+            // return await this.applicationsService.addApplicationFiles(request['user'], params.uuid, files);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post(':id/edit')
+    async aditApplicationData(@Req() request: Request, @Param() params: any, @Body() applicationData: CreateApplication) {
+        try {
+            return await this.applicationsService.editApplication(request['user'], params.id, applicationData)
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Delete(':id/deleteFile/:fileId')
+    async deleteApplicationFile(@Req() request: Request, @Param() params: any) {
+        try {
+            // return await this.applicationsService.deleteApplicationFiles(request['user'], params.id, params.fileId)
         } catch (e) {
             console.log(e);
             return e
@@ -84,7 +142,40 @@ export class ApplicationsController {
     @Get(':id/files')
     async getApplicationsFiles(@Req() request: Request, @Param() params: any) {
         try {
-            return await this.applicationsService.getApplicationsFiles(request['user'], params.id);
+            // return await this.applicationsService.getApplicationsFiles(request['user'], params.id);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('all')
+    async getAllApplications(@Req() request: Request, @Query('page') page: number) {
+        try {
+            return await this.applicationsService.getAllApplications(request['user'], page);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post(':id/filial')
+    async setApplicationFilial(@Req() request: Request, @Param() params: any, @Body() data: SetApplicationFilial) {
+        try {
+            // return await this.applicationsService.setFilial(request['user'], data, params.id)
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post(':id/numberstatus')
+    async setApplicationNumberStatus(@Req() request: Request, @Param() params: any, @Body() data: SetApplicationNumberStatus) {
+        try {
+            // return await this.applicationsService.setNumberStatus(request['user'], data, params.id)
         } catch (e) {
             console.log(e);
             return e
