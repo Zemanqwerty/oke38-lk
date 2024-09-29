@@ -1,6 +1,7 @@
-import { Applications } from 'src/applications/applications.entity';
-import { Role } from 'src/roles/roles.enum';
-import { Users } from 'src/users/users.entity';
+import { Predstavitel } from 'src/docsFiles/predstavitel.entity';
+import { Applications } from '../applications/applications.entity';
+import { Role } from '../roles/roles.enum';
+import { Users } from '../users/users.entity';
 import { ManyToMany, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({
@@ -10,11 +11,15 @@ export class Filials {
   @PrimaryGeneratedColumn()
   id_filial: number;
 
-  @Column()
-  caption_filial: string;
+  @Column({
+    nullable: true
+  })
+  caption_filial!: string | null;
 
-  @Column()
-  caption_filial_short: string;
+  @Column({
+    nullable: true
+  })
+  caption_filial_short!: string | null;
 
   @OneToMany(() => Users, (user) => user.id_filial, {cascade: true})
   users: Users[]

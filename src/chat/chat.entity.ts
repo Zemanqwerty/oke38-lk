@@ -1,8 +1,8 @@
-import { Applications } from 'src/applications/applications.entity';
-import { Files } from 'src/files/Files.entity';
-import { Message } from 'src/messages/messages.entity';
-import { Role } from 'src/roles/roles.enum';
-import { Users } from 'src/users/users.entity';
+import { Applications } from '../applications/applications.entity';
+import { Files } from '../files/Files.entity';
+import { Message } from '../messages/messages.entity';
+import { Role } from '../roles/roles.enum';
+import { Users } from '../users/users.entity';
 import { OneToOne, JoinColumn, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
@@ -23,3 +23,25 @@ export class Chat {
   @UpdateDateColumn()
   updatedAt: Date;
 }
+
+// import { OneToOne, JoinColumn, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+
+// @Entity({
+//   name: 'tblzayavkachat'
+// })
+// export class Doctype {
+//   @PrimaryGeneratedColumn('uuid', {
+//     name: 'id_doctype'
+//   })
+//   id_doctype: string;
+
+//   @Column({
+//     name: 'caption_doctype',
+//     type: 'char varying',
+//     nullable: false
+//   })
+//   caption_doctype: string;
+
+//   @OneToMany(() => Documents, (documents) => documents.doctype, {cascade: true})
+//   documents: Documents[];
+// }

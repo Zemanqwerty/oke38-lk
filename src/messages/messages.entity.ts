@@ -1,8 +1,8 @@
-import { Applications } from 'src/applications/applications.entity';
-import { Chat } from 'src/chat/chat.entity';
-import { Files } from 'src/files/Files.entity';
-import { Role } from 'src/roles/roles.enum';
-import { Users } from 'src/users/users.entity';
+import { Applications } from '../applications/applications.entity';
+import { Chat } from '../chat/chat.entity';
+import { Files } from '../files/Files.entity';
+import { Role } from '../roles/roles.enum';
+import { Users } from '../users/users.entity';
 import { OneToOne, JoinColumn, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()

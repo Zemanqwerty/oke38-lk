@@ -1,3 +1,3 @@
 export class SetApplicationFilial {
-    filial: string;
+    filialId: number;
 }

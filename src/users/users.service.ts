@@ -43,16 +43,17 @@ export class UsersService {
 
         userData.id_userrole = await this.userRolesService.getRoleByCaption('заявитель');
         userData.id_usertype = await this.userTypesService.getUserTypeByCaption('физическое лицо');
-        userData.id_filial = await this.filialService.getFilialByCaption(' ')
+        userData.id_filial = await this.filialService.getFilialById(-1)
 
 
         userData.password = await bcrypt.hash(userData.password, 10);
 
         const activationLink = uuidv4();
+        const idUser = uuidv4();
 
         userData.activationLink = activationLink;
-        
-        console.log(userData);
+        userData.id_user = idUser;
+        userData.user_login = userData.email;
 
         const newUser = this.usersRepository.create(userData);
         await this.usersRepository.save(newUser);
@@ -64,6 +65,10 @@ export class UsersService {
 
     async getUserByEmail(email: string): Promise<Users> {
         return await this.usersRepository.findOne({
+            relations: {
+                id_userrole: true,
+                id_usertype: true
+            },
             where: {
                 email: email,
                 isActive: true,
@@ -146,7 +151,7 @@ export class UsersService {
     }
 
     async getAll(pageNumber: number, userData: Payload) {
-        const user = await this.getUserByEmail(userData.publickUserEmail);
+        const user = await this.getActivatedUserByEmail(userData.publickUserEmail);
 
         if (user.id_userrole.caption_userrole !== Role.Admin) {
             throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
@@ -156,6 +161,11 @@ export class UsersService {
         const take = 20;
 
         const users = await this.usersRepository.find({
+            relations: {
+                id_userrole: true,
+                id_usertype: true,
+                id_filial: true
+            },
             where: {
                 isActive: true
             },
@@ -185,14 +195,24 @@ export class UsersService {
             throw new HttpException('Пользователь с такой почтой уже зарегистрирован', HttpStatus.BAD_REQUEST);
         }
 
+        console.log(userData.type);
+        console.log(userData.roles);
+        const userType = await this.userTypesService.getUserTypeByCaption(userData.type);
+        const userRole = await this.userRolesService.getRoleByCaption(userData.roles);
+
         userData.password = await bcrypt.hash(userData.password, 10);
         userData.isActive = true;
 
         const activationLink = '';
-
-        console.log(user);
+        const idUser = uuidv4();
 
         userData.activationLink = activationLink;
+        userData.id_user = idUser;
+        userData.id_userrole = userRole;
+        userData.id_usertype = userType;
+        userData.id_filial = await this.filialService.getFilialById(-1);
+        userData.user_login = userData.email;
+        userData.isActive = true;
 
         console.log(userData);
 
@@ -274,29 +294,32 @@ export class UsersService {
         return await this.usersRepository.remove(user);
     }
 
-    async onModuleInit() {
-        try {
-            const adminRole = await this.userRolesService.getRoleByCaption(Role.Admin)
-            const adminType = await this.userTypesService.getUserTypeByCaption('физическое лицо')
-            const adminFilial = await this.filialService.getFilialByCaption(' ')
+    // async onModuleInit() {
+    //     try {
+    //         const adminRole = await this.userRolesService.getRoleByCaption(Role.Admin)
+    //         const adminType = await this.userTypesService.getUserTypeByCaption('физическое лицо')
+    //         const adminFilial = await this.filialService.getFilialById(-1)
 
-            const adminHashedPassword = await bcrypt.hash(process.env.BASE_ADMIN_PASSWORD, 10);
+    //         const adminHashedPassword = await bcrypt.hash(process.env.BASE_ADMIN_PASSWORD, 10);
+
+    //         const idUser = uuidv4();
             
-            const baseAdmin = this.usersRepository.create({
-                id_usertype: adminType,
-                email: process.env.BASE_ADMIN_EMAIL,
-                isActive: true,
-                password: adminHashedPassword,
-                id_userrole: adminRole,
-                id_filial: adminFilial,
-                user_login: 'admin'
-            });
+    //         const baseAdmin = this.usersRepository.create({
+    //             id_user: idUser,
+    //             id_usertype: adminType,
+    //             email: process.env.BASE_ADMIN_EMAIL,
+    //             isActive: true,
+    //             password: adminHashedPassword,
+    //             id_userrole: adminRole,
+    //             id_filial: adminFilial,
+    //             user_login: 'admin'
+    //         });
 
-            await this.usersRepository.save(baseAdmin);
-            console.log('BASE ADMIN CREATED');
-        } catch (e) {
-            console.log(e);
-        }
-        return
-    }
+    //         await this.usersRepository.save(baseAdmin);
+    //         console.log('BASE ADMIN CREATED');
+    //     } catch (e) {
+    //         console.log(e);
+    //     }
+    //     return
+    // }
 }

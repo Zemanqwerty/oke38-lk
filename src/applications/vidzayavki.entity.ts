@@ -1,6 +1,6 @@
-import { Applications } from 'src/applications/applications.entity';
-import { Role } from 'src/roles/roles.enum';
-import { Users } from 'src/users/users.entity';
+import { Applications } from '../applications/applications.entity';
+import { Role } from '../roles/roles.enum';
+import { Users } from '../users/users.entity';
 import { ManyToMany, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
 
 @Entity({
@@ -18,10 +18,14 @@ export class VidZayavki {
   })
   enumorder: number;
 
-  @Column()
+  @Column({
+    nullable: true
+  })
   caption_short: string;
 
-  @Column()
+  @Column({
+    nullable: true
+  })
   caption_long: string;
 
   @OneToMany(() => Applications, (application) => application.id1c_vidzayavki, {cascade: true})

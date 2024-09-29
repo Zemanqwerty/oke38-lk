@@ -7,6 +7,7 @@ import { SmtpModule } from 'src/smtp/smtp.module';
 import { UserRolesModule } from 'src/user-roles/user-roles.module';
 import { UserTypesModule } from 'src/user-types/user-types.module';
 import { FilialsModule } from 'src/filials/filials.module';
+import { DocumentsModule } from 'src/docsFiles/documents.module';
 
 @Module({
     imports: [
@@ -14,6 +15,7 @@ import { FilialsModule } from 'src/filials/filials.module';
         UserRolesModule,
         UserTypesModule,
         FilialsModule,
+        DocumentsModule,
         TypeOrmModule.forFeature([Users])
     ],
     providers: [UsersService],

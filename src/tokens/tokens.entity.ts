@@ -1,5 +1,5 @@
-import { Role } from 'src/roles/roles.enum';
-import { Users } from 'src/users/users.entity';
+import { Role } from '../roles/roles.enum';
+import { Users } from '../users/users.entity';
 import { OneToOne, JoinColumn, ManyToMany, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
@@ -11,7 +11,7 @@ export class Tokens {
   token: string;
 
   @OneToOne(() => Users)
-  @JoinColumn()
+  @JoinColumn({ name: 'user_id' })
   user: Users;
 
   @CreateDateColumn()

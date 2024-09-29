@@ -3,36 +3,42 @@ import { Users } from "src/users/users.entity";
 
 export class ApplicationsResponse {
     uuid: string;
-    userFirstName: string;
-    userLastName: string;
-    userSurname: string;
-    userEmail: string;
-    userPhoneNumber: string;
-    userType: string;
-    createdAt: Date;
-    filial: string;
-    applicationNumber: string;
-    applicationDate: Date;
-    powerLevel: string;
-    cenovayaCat: string;
-    paymentOption: string;
-    vidzayavki: string;
-    ststusoplaty: string;
-    status: string;
-    address: string;
-    provider: string;
-    reason: string;
+    userFirstName: string | null;
+    userLastName: string | null;
+    userSurname: string | null;
+    userEmail: string | null;
+    userPhoneNumber: string | null;
+    // userType: string | null;
+    createdAt: Date | null;
+    // filial: string | null;
+    applicationNumber: string | null;
+    applicationDate: Date | null;
+    powerLevel: string | null;
+    maxPower: number | null;
+    cenovayaCat: string | null;
+    paymentOption: string | null;
+    vidzayavki: string | null;
+    ststusoplaty: string | null;
+    status: string | null;
+    address: string | null;
+    provider: string | null;
+    reason: string | null;
+    yl_fullname: string | null;
+    yl_shortname: string | null;
+    contact_familiya: string| null;
+    filial?: string | null;
+
 
 
     constructor (model: Applications,
-        urovenU: string,
-        cenovayaCat: string,
-        vidrassrochki: string,
-        vidzayavki: string,
-        statusoplaty: string,
-        statuszayavki: string,
-        provider: string,
-        reason: string)
+        urovenU: string | null,
+        cenovayaCat: string | null,
+        vidrassrochki: string | null,
+        vidzayavki: string | null,
+        statusoplaty: string | null,
+        statuszayavki: string | null,
+        provider: string | null,
+        reason: string | null)
     {
         this.uuid = model.uuid
         this.userFirstName = model.user.firstname
@@ -40,9 +46,9 @@ export class ApplicationsResponse {
         this.userSurname = model.user.surname
         this.userEmail = model.user.email
         this.userPhoneNumber = model.user.phoneNumber
-        this.userType = model.user.id_usertype.caption_usertype
+        // this.userType = model.user.id_usertype.caption_usertype
         this.createdAt = model.createdAt
-        this.filial = model.filial.caption_filial
+        // this.filial = model.filial.caption_filial
         this.applicationNumber = model.applicationNumber
         this.applicationDate = model.applicationDate
         this.powerLevel = urovenU;
@@ -54,6 +60,12 @@ export class ApplicationsResponse {
         this.address = model.address;
         this.provider = provider;
         this.reason = reason;
+        // this.maxPower = parseFloat(model.maxPower.toString().split('.')[0] + model.maxPower.toString().split('.')[1][0]);
+        this.maxPower = model.maxPower;
+        this.yl_fullname = model.user.yl_fullname;
+        this.yl_shortname = model.user.yl_shortname;
+        this.contact_familiya = model.user.contact_familiya;
+        this.filial = model.filial ? model.filial.caption_filial : null;
     }
 }
 

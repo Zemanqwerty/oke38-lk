@@ -18,28 +18,38 @@ export class UserTypesService {
         })
     }
 
+    async getUserTypeById(typeId: number) {
+        return await this.userTypesRepository.findOne({
+            where: {
+                id_usertype: typeId
+            }
+        });
+    }
+
     async onModuleInit() {
         const userTypes = await this.userTypesRepository.find();
 
-        if (userTypes.length !== 0) {
-            return
-        }
+        console.log(userTypes.length);
 
-        const fl = this.userTypesRepository.create({
-            caption_usertype: 'физическое лицо'
-        })
+        // if (userTypes.length !== 0) {
+        //     return
+        // }
 
-        const yl = this.userTypesRepository.create({
-            caption_usertype: 'юридическое лицо'
-        })
+        // const fl = this.userTypesRepository.create({
+        //     caption_usertype: 'физическое лицо'
+        // })
 
-        const ip = this.userTypesRepository.create({
-            caption_usertype: 'индивидуальный предприниматель'
-        })
+        // const yl = this.userTypesRepository.create({
+        //     caption_usertype: 'юридическое лицо'
+        // })
 
-        await this.userTypesRepository.save(fl);
-        await this.userTypesRepository.save(yl);
-        await this.userTypesRepository.save(ip);
+        // const ip = this.userTypesRepository.create({
+        //     caption_usertype: 'индивидуальный предприниматель'
+        // })
+
+        // await this.userTypesRepository.save(fl);
+        // await this.userTypesRepository.save(yl);
+        // await this.userTypesRepository.save(ip);
 
         return
     }

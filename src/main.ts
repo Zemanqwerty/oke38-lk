@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
+import { createMicroservices } from './applications/applications.microservice';
 
 async function bootstrap() {
   if (process.env.DEBUG === 'true') {
@@ -11,6 +12,7 @@ async function bootstrap() {
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
       credentials: true, 
     });
+    await createMicroservices(app);
     await app.listen(5010);
   } else {
     const app = await NestFactory.create(AppModule);
@@ -20,6 +22,7 @@ async function bootstrap() {
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
       credentials: true, 
     });
+    await createMicroservices(app);
     await app.listen(5000);
   }
 }

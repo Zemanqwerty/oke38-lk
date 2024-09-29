@@ -5,9 +5,8 @@ import { UserTypes } from "src/user-types/user-types.entity";
 import { Users } from "src/users/users.entity";
 
 export class AllUsersResponse {
-    id_userrole?: string;
-    id_usertype?: UserTypes;
-    id_filial?: Filials;
+    roles?: string | null;
+    type?: string | null;
     lastname: string | null;
     firstname: string | null;
     surname: string | null;
@@ -23,7 +22,7 @@ export class AllUsersResponse {
     createdAt: Date | null;
 
     constructor (model: Users) {
-        this.id_usertype = model.id_usertype
+        this.type = model.id_usertype ? model.id_usertype.caption_usertype : null
         this.lastname = model.lastname
         this.firstname = model.firstname
         this.surname = model.surname
@@ -35,7 +34,7 @@ export class AllUsersResponse {
         this.contact_otchestvo = model.contact_otchestvo
         this.email = model.email
         this.phoneNumber = model.phoneNumber
-        this.id_userrole = model.id_userrole.caption_userrole
+        this.roles = model.id_userrole ? model.id_userrole.caption_userrole : 'заявитель'
         this.createdAt = model.date_create_user
     }
 }

@@ -1,9 +1,10 @@
-import { Applications } from 'src/applications/applications.entity';
-import { Filials } from 'src/filials/filials.entity';
+import { Applications } from '../applications/applications.entity';
+import { Filials } from '../filials/filials.entity';
 import { Role } from 'src/roles/roles.enum';
-import { UserRoles } from 'src/user-roles/user-roles.entity';
-import { UserTypes } from 'src/user-types/user-types.entity';
+import { UserRoles } from '../user-roles/user-roles.entity';
+import { UserTypes } from '../user-types/user-types.entity';
 import { JoinColumn, ManyToMany, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Documents } from '../docsFiles/documents.entity';
 
 @Entity({
   name: 'tbluserinfo'
@@ -12,7 +13,9 @@ export class Users {
   @PrimaryGeneratedColumn('uuid')
   id_user: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({
+    nullable: true
+  })
   date_create_user: Date;
 
   @Column({
@@ -51,7 +54,8 @@ export class Users {
 
   // ---
   @Column({
-    nullable: true
+    nullable: true,
+    default: null
   })
   activationLink: string | null;
   // ---
@@ -66,7 +70,8 @@ export class Users {
 
   @Column({
     name: 'isapproved',
-    default: false
+    default: false,
+    nullable: true
   })
   isActive: boolean;
 
@@ -131,17 +136,17 @@ export class Users {
   })
   comment: string | null;
 
-  @ManyToOne(() => UserTypes, (userType) => userType.users)
+  @ManyToOne(() => UserTypes, (userType) => userType.users, {nullable: true})
   @JoinColumn({ name: 'id_usertype' })
-  id_usertype: UserTypes;
+  id_usertype: UserTypes | null;
 
-  @ManyToOne(() => UserRoles, (userRole) => userRole.users)
+  @ManyToOne(() => UserRoles, (userRole) => userRole.users, {nullable: true})
   @JoinColumn({ name: 'id_userrole' })
-  id_userrole: UserRoles;
+  id_userrole: UserRoles | null;
 
-  @ManyToOne(() => Filials, (filial) => filial.users)
+  @ManyToOne(() => Filials, (filial) => filial.users, {nullable: true})
   @JoinColumn({ name: 'id_filial' })
-  id_filial: Filials
+  id_filial: Filials | null;
 
   // @Column({
   //   default: Role.Client
@@ -174,4 +179,7 @@ export class Users {
 
   @OneToMany(() => Applications, (application) => application.user, {cascade: true})
   applications: Applications[]
+
+  @OneToMany(() => Documents, (docs) => docs.id_user, {cascade: true})
+  documents: Documents[]
 }

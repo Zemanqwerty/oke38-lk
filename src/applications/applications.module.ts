@@ -16,15 +16,47 @@ import { VidZayavki } from './vidzayavki.entity';
 import { ZayavkaStatus } from './zayavkaststus.entity';
 import { Gp } from './gp.entity';
 import { PrichinaPodachi } from './prichinapodachi.entity';
+import { FilialsModule } from 'src/filials/filials.module';
+import { DocumentsModule } from 'src/docsFiles/documents.module';
+import { ApplicationTypes } from './zayavkatype.entity';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { OrderSource } from './ordersource.entity';
 
 @Module({
     imports: [
+        ConfigModule,
         UsersModule,
         FilesModule,
+        DocumentsModule,
         ChatModule,
-        TypeOrmModule.forFeature([Applications, Files, CenovayaKategoriya, EnumUrovenU, StatusOplaty, VidRassrochki, VidZayavki, ZayavkaStatus, Gp, PrichinaPodachi]),
+        FilialsModule,
+        TypeOrmModule.forFeature([Applications, Files, CenovayaKategoriya, EnumUrovenU, StatusOplaty, VidRassrochki, VidZayavki, ZayavkaStatus, Gp, PrichinaPodachi, ApplicationTypes, OrderSource]),
+        ClientsModule.registerAsync([
+            {
+                name: 'APPLICAITIONS_TO_1C_SERVICE',
+                useFactory: (configService: ConfigService) => {
+                    const user = configService.get('RABBITMQ_USER');
+                    const password = configService.get('RABBITMQ_PASSWORD');
+                    const host = configService.get('RABBITMQ_HOST');
+                    const queueName = configService.get('RABBITMQ_QUEUE_NAME_1C_APPLICATIONS');
+
+                    return {
+                        transport: Transport.RMQ,
+                        options: {
+                            urls: [`amqp://${user}:${password}@${host}`],
+                            queue: queueName,
+                            queueOptions: {
+                                durable: true,
+                            },
+                        },
+                    };
+                },
+                inject: [ConfigService],
+            },
+        ]),
         ],
-    providers: [ApplicationsService, FilesService],
+    providers: [ApplicationsService, FilesService, DocumentsModule],
     controllers: [ApplicationsController],
     exports: [ApplicationsService]
 })

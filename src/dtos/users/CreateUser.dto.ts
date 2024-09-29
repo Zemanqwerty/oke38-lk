@@ -4,9 +4,12 @@ import { UserRoles } from "src/user-roles/user-roles.entity";
 import { UserTypes } from "src/user-types/user-types.entity";
 
 export class CreateUser {
+    id_user?: string;
     id_userrole?: UserRoles;
     id_usertype?: UserTypes;
     id_filial?: Filials;
+    type: string;
+    roles: string;
     lastname: string;
     firstname: string;
     surname: string;
@@ -21,4 +24,5 @@ export class CreateUser {
     password: string;
     activationLink?: string;
     isActive?: boolean;
+    user_login?: string;
 }

@@ -1,8 +1,6 @@
-import { Applications } from '../applications/applications.entity';
-import { Role } from '../roles/roles.enum';
-import { UserTypes } from '../user-types/user-types.entity';
-import { Users } from '../users/users.entity';
-import { JoinColumn, ManyToMany, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { UserTypes } from "../user-types/user-types.entity";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Applications } from "./applications.entity";
 
 @Entity({
     name: 'tblzayavkatype'

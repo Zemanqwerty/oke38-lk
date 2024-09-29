@@ -1,15 +1,24 @@
-import { Files } from 'src/files/Files.entity';
-import { Role } from 'src/roles/roles.enum';
-import { Users } from 'src/users/users.entity';
-import { OneToOne, JoinColumn, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Files } from '../files/Files.entity';
+import { Role } from '../roles/roles.enum';
+import { Users } from '../users/users.entity';
+import { OneToOne, JoinColumn, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
 import { ApplicationStatus } from './applicationsStatus.enum';
-import { ApplicationTypes } from 'src/application-type/application-type.entity';
-import { Filials } from 'src/filials/filials.entity';
+import { ApplicationTypes } from '../application-type/application-type.entity';
+import { Filials } from '../filials/filials.entity';
+import { ZayavkaStatus } from './zayavkaststus.entity';
+import { stat } from 'fs';
+import { Documents } from '../docsFiles/documents.entity';
+import { Contract } from '../docsFiles/contract.entity';
+import { OrderSource } from './ordersource.entity';
+import { DogovorEnergo } from 'src/docsFiles/dogovorenergo.entity';
 
-@Entity()
+@Entity({
+  name: 'tblzayavka'
+})
 export class Applications {
-  @PrimaryGeneratedColumn('uuid', {
-    name: 'id_zayavka'
+  @PrimaryColumn({
+    name: 'id_zayavka',
+    type: 'uuid'
   })
   uuid: string;
 
@@ -36,7 +45,7 @@ export class Applications {
   })
   createdAt: Date;
 
-  @ManyToOne(() => Filials, (filial) => filial.applications)
+  @ManyToOne(() => Filials, (filial) => filial.applications, {nullable: true})
   @JoinColumn({name: 'id_filial'})
   filial: Filials;
 
@@ -55,7 +64,7 @@ export class Applications {
   applicationDate: Date;
 
   @Column({
-    default: false
+    default: false,
   })
   is_viewed: boolean;
 
@@ -67,16 +76,14 @@ export class Applications {
   viewed_operator: string | null;
 
   @Column({
-    default: false
+    default: false,
+    nullable: true
   })
   is_temp: boolean
 
-  @Column({
-    nullable: true,
-    default: null,
-    name: 'id_zayavkastatus'
-  })
-  status: number | null;
+  @ManyToOne(() => ZayavkaStatus, (status) => status.applications, {nullable: true})
+  @JoinColumn({name: 'id_zayavkastatus'})
+  status: ZayavkaStatus | null;
 
   // 1c
 
@@ -232,13 +239,6 @@ export class Applications {
   @Column({
     nullable: true,
     default: null,
-    type: 'uuid'
-  })
-  id_ordersource: string
-
-  @Column({
-    nullable: true,
-    default: null,
     type: 'timestamp'
   })
   date_copy_from1c: Date
@@ -258,6 +258,19 @@ export class Applications {
   // })
   // applicationType?: string;
 
+  @ManyToOne(() => OrderSource, (orderSource) => orderSource.applications, {nullable: true})
+  @JoinColumn({name: 'id_ordersource'})
+  id_ordersource: OrderSource | null;
+
   @OneToMany(() => Files, (file) => file.application, {cascade: true})
-  files: Files[]
+  files: Files[];
+
+  @OneToMany(() => Documents, (documents) => documents.application, {cascade: true})
+  documents: Documents[];
+
+  @OneToMany(() => Contract, (contract) => contract.application, {cascade: true})
+  contract: Contract[];
+
+  @OneToMany(() => DogovorEnergo, (dogovorEnergo) => dogovorEnergo.id_zayavka, {cascade: true})
+  dogovorenergo: DogovorEnergo[];
 }

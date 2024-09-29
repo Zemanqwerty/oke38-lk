@@ -20,43 +20,44 @@ export class UserRolesService {
 
     async onModuleInit() {
         const userRoles = await this.userRolesRepository.find();
+        console.log(userRoles.length);
 
-        if (userRoles.length !== 0) {
-            return
-        }
+        // if (userRoles.length !== 0) {
+        //     return
+        // }
 
-        const clientRole = this.userRolesRepository.create({
-            caption_userrole: 'заявитель'
-        })
+        // const clientRole = this.userRolesRepository.create({
+        //     caption_userrole: 'заявитель'
+        // })
 
-        const adminRole = this.userRolesRepository.create({
-            caption_userrole: 'администратор'
-        })
+        // const adminRole = this.userRolesRepository.create({
+        //     caption_userrole: 'администратор'
+        // })
 
-        const operatorFilial = this.userRolesRepository.create({
-            caption_userrole: 'оператор (филиал)'
-        })
+        // const operatorFilial = this.userRolesRepository.create({
+        //     caption_userrole: 'оператор (филиал)'
+        // })
 
-        const operatorAUP = this.userRolesRepository.create({
-            caption_userrole: 'оператор (АУП)'
-        })
+        // const operatorAUP = this.userRolesRepository.create({
+        //     caption_userrole: 'оператор (АУП)'
+        // })
 
-        const operatorGP = this.userRolesRepository.create({
-            caption_userrole: 'оператор (ГП)'
-        })
+        // const operatorGP = this.userRolesRepository.create({
+        //     caption_userrole: 'оператор (ГП)'
+        // })
 
-        const callCenter = this.userRolesRepository.create({
-            caption_userrole: 'Call Center'
-        })
+        // const callCenter = this.userRolesRepository.create({
+        //     caption_userrole: 'Call Center'
+        // })
 
-        console.log('CREATING BASE USER-ROLES');
+        // console.log('CREATING BASE USER-ROLES');
 
-        await this.userRolesRepository.save(clientRole);
-        await this.userRolesRepository.save(adminRole);
-        await this.userRolesRepository.save(operatorFilial);
-        await this.userRolesRepository.save(operatorAUP);
-        await this.userRolesRepository.save(operatorGP);
-        await this.userRolesRepository.save(callCenter);
+        // await this.userRolesRepository.save(clientRole);
+        // await this.userRolesRepository.save(adminRole);
+        // await this.userRolesRepository.save(operatorFilial);
+        // await this.userRolesRepository.save(operatorAUP);
+        // await this.userRolesRepository.save(operatorGP);
+        // await this.userRolesRepository.save(callCenter);
 
         return
     }

@@ -18,6 +18,20 @@ export class AuthService {
         private tokensService: TokensService
     ) {};
 
+    // async hashPassword(password: string, salt: string): string {
+    //     const hash = crypto.pbkdf2Sync(password, salt, this.iterations, this.keyLength, this.digest);
+    //     return hash.toString('base64');
+    // }
+    
+    // async verifyPassword(password: string, salt: string, hashedPassword: string): boolean {
+    //     const hash = crypto.pbkdf2Sync(password, salt, this.iterations, this.keyLength, this.digest);
+    //     return hash.toString('base64') === hashedPassword;
+    // }
+
+    // async oldLoginASP(password: string) {
+
+    // }
+
     async login(userData: LoginUser, response: Response) {
         const user = await this.usersService.getActivatedUserByEmail(userData.email);
         console.log(user);
@@ -26,12 +40,17 @@ export class AuthService {
             throw new HttpException('Пользователь с такой почтой не найден', HttpStatus.BAD_REQUEST);
         }
 
-        console.log('------------------');
-        const passwordsEqual = await bcrypt.compare(userData.password, user.password)
-        console.log(passwordsEqual);
-        console.log('------------------');
+        let passwordsEqual;
+
+        try {
+            passwordsEqual = await bcrypt.compare(userData.password, user.password)
+        } catch (e) {
+            console.log(userData.password, user.password);
+            passwordsEqual = userData.password == user.password;
+        }
 
         if (!passwordsEqual) {
+            console.log(userData.password, user.password);
             console.log('------------------');
             console.log('incorrect password');
             console.log('------------------');

@@ -17,6 +17,8 @@ import * as fs from 'fs';
 import { Payload } from "src/dtos/auth/Payload.dto";
 import { SetApplicationFilial } from "src/dtos/applications/SetApplicationFilial.dto";
 import { SetApplicationNumberStatus } from "src/dtos/applications/SetApplicationNumberStatus";
+import { MessagePattern, RmqContext, Payload as MicroservicesPayload, Ctx, EventPattern } from "@nestjs/microservices";
+import { Applications } from "./applications.entity";
 
 
 
@@ -27,13 +29,13 @@ export class ApplicationsController {
     @UseGuards(AuthGuard)
     @Post('')
     @UseInterceptors(FileFieldsInterceptor([
-        { name: 'applicationCopy', maxCount: 2 },
-        { name: 'passportCopy', maxCount: 2 },
-        { name: 'planeCopy', maxCount: 2 },
-        { name: 'ownDocsCopy', maxCount: 2 },
-        { name: 'powerOfAttorneyCopy', maxCount: 2 },
-        { name: 'constituentDocsCopy', maxCount: 2 },
-        { name: 'otherDocs', maxCount: 5 },
+        { name: '10', maxCount: 2 },
+        { name: '8', maxCount: 2 },
+        { name: '5', maxCount: 2 },
+        { name: '6', maxCount: 2 },
+        { name: '7', maxCount: 2 },
+        { name: '9', maxCount: 2 },
+        { name: '0', maxCount: 5 },
       ], {
         storage: diskStorage({
             destination: (req, file, callback) => {
@@ -60,10 +62,38 @@ export class ApplicationsController {
         }
     }
 
+    // @MessagePattern({ cmd: 'applicationFrom1c' })
+    // async createApplicationFrom1c(@MicroservicesPayload() application: Applications, @Ctx() context: RmqContext) {
+    //     const channel = context.getChannelRef();
+    //     const originalMsg = context.getMessage();
+
+    //     channel.ack(originalMsg);
+    //     console.log(originalMsg);
+
+    //     // return await this.applicationsService.
+    // }
+
+    @EventPattern() // Обработчик для очереди
+    async handleIncomingMessageK(@MicroservicesPayload() data: any) {
+        console.log('Received message from 1c:', data);
+        // Здесь вы можете обработать входящее сообщение из очереди K
+    }
+
+    @UseGuards(AuthGuard)
+    @Get(':uuid/sendTo1c')
+    async sendApplicationTo1C(@Req() request: Request, @Param() params: any) {
+        try {
+            return await this.applicationsService.sendApplicationTo1c(request['user'], params.uuid);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
     @UseGuards(AuthGuard)
     @Post(':uuid/addFiles')
     @UseInterceptors(FileFieldsInterceptor([
-        { name: 'applicationCopy', maxCount: 2 },
+        { name: 'applicationCopy', maxCount: 2 }, 
         { name: 'passportCopy', maxCount: 2 },
         { name: 'planeCopy', maxCount: 2 },
         { name: 'ownDocsCopy', maxCount: 2 },
@@ -142,7 +172,7 @@ export class ApplicationsController {
     @Get(':id/files')
     async getApplicationsFiles(@Req() request: Request, @Param() params: any) {
         try {
-            // return await this.applicationsService.getApplicationsFiles(request['user'], params.id);
+            return await this.applicationsService.getApplicationsFiles(request['user'], params.id);
         } catch (e) {
             console.log(e);
             return e
@@ -164,7 +194,18 @@ export class ApplicationsController {
     @Post(':id/filial')
     async setApplicationFilial(@Req() request: Request, @Param() params: any, @Body() data: SetApplicationFilial) {
         try {
-            // return await this.applicationsService.setFilial(request['user'], data, params.id)
+            return await this.applicationsService.setFilial(request['user'], data, params.id)
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('getStatuses')
+    async getStatusesForApplications(@Req() request: Request) {
+        try {
+            return await this.applicationsService.getApplicationsStatuses(request['user']);
         } catch (e) {
             console.log(e);
             return e
@@ -175,7 +216,18 @@ export class ApplicationsController {
     @Post(':id/numberstatus')
     async setApplicationNumberStatus(@Req() request: Request, @Param() params: any, @Body() data: SetApplicationNumberStatus) {
         try {
-            // return await this.applicationsService.setNumberStatus(request['user'], data, params.id)
+            return await this.applicationsService.setNumberStatus(request['user'], data, params.id)
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('getFilials')
+    async getFilialsForApplication(@Req() request: Request) {
+        try {
+            return await this.applicationsService.getFilialsForApplication(request['user']);
         } catch (e) {
             console.log(e);
             return e
