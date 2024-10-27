@@ -13,7 +13,7 @@ async function bootstrap() {
       credentials: true, 
     });
     await createMicroservices(app);
-    await app.listen(5010);
+    await app.listen(5002);
   } else {
     const app = await NestFactory.create(AppModule);
     app.use(cookieParser());

@@ -1,0 +1,89 @@
+version: '3.1'
+
+services:
+  main-service:
+    image: zemanqwerty/oke-lk-service:main-service
+    ports:
+      - 5002:5000
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: oke38-lk
+      JWT_ACCESS_SECRET_KEY: developmentSecretKeyAccess
+      JWT_REFRESH_SECRET_KEY: developmentSecretKeyRefresh
+      RABBITMQ_USER: rabbit
+      RABBITMQ_PASSWORD: rabbit
+      RABBITMQ_HOST: rudakov_aa.guep
+      RABBITMQ_QUEUE_NAME: smtpService # from lk to smtp service (email)
+      RABBITMQ_QUEUE_NAME_1C_APPLICATIONS: LK_AppModified # from lk to 1c (applications)
+      RABBITMQ_QUEUE_NAME_EDIT_1C_APPLICATIONS: LK_AppModified # from lk to 1c (applications)
+      RABBITMQ_QUEUE_NAMQ_EDIT_LK_APPLICATIONS: 1C_AppModified # from 1c to lk (applications)
+      BASE_CLIENT_URL: localhost:3000
+      BASE_BACKEND_URL: localhost:5002
+      BASE_ADMIN_PASSWORD: baseadmin
+      BASE_ADMIN_EMAIL: baseadmin@gmail.com
+      DEBUG: false
+    restart: unless-stopped
+    depends_on:
+      - smtp-service
+
+  smtp-service:
+    image: zemanqwerty/oke-lk-service:smtp-service
+    ports:
+      - 5011:5011
+    environment:
+      RABBITMQ_USER: admin
+      RABBITMQ_PASSWORD: admin
+      RABBITMQ_HOST: rabbitmq:5672
+      RABBITMQ_QUEUE_NAME: smtpService
+
+      MAIL_HOST: smtp.mail.ru
+      MAIL_USER: zemanqwerty.smtp@mail.ru
+      MAIL_PASSWORD: 7GZVptRN0jg7TEC8suk8
+      MAIL_FROM: zemanqwerty.smtp@mail.ru
+    restart: unless-stopped
+    depends_on:
+     - db
+
+  # web-client:
+  #   image: zemanqwerty/oke-lk-service:web-client
+  #   ports:
+  #     - 3010:3010
+  #   restart: unless-stopped
+
+  db:
+    image:  postgres:16
+    ports:
+      - 32700:5432
+    volumes:
+      - data:/var/lib/postgresql/data
+    # command: postgres -c stats_temp_directory=/tmp
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: perscab
+    restart: unless-stopped
+    healthcheck:
+      test: "pg_isready -h db"
+      interval: 3s
+      timeout: 5s
+      retries: 5
+
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   container_name: rabbitmq
+  #   hostname: localhost
+  #   volumes:
+  #     - /var/lib/rabbitmq
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=admin
+  #     - RABBITMQ_DEFAULT_PASS=admin
+  #   restart: unless-stopped
+
+volumes:
+  data:
