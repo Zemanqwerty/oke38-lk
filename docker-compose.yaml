@@ -6,10 +6,10 @@ services:
     ports:
       - 5002:5000
     environment:
-      DB_HOST: db
+      DB_HOST: rudakov_aa.guep
       DB_PORT: 5432
-      DB_USER: root
-      DB_PASSWORD: root
+      DB_USER: postgree
+      DB_PASSWORD: Pfujhjlyfz
       DB_NAME: oke38-lk
       JWT_ACCESS_SECRET_KEY: developmentSecretKeyAccess
       JWT_REFRESH_SECRET_KEY: developmentSecretKeyRefresh
@@ -20,8 +20,8 @@ services:
       RABBITMQ_QUEUE_NAME_1C_APPLICATIONS: LK_AppModified # from lk to 1c (applications)
       RABBITMQ_QUEUE_NAME_EDIT_1C_APPLICATIONS: LK_AppModified # from lk to 1c (applications)
       RABBITMQ_QUEUE_NAMQ_EDIT_LK_APPLICATIONS: 1C_AppModified # from 1c to lk (applications)
-      BASE_CLIENT_URL: localhost:3000
-      BASE_BACKEND_URL: localhost:5002
+      BASE_CLIENT_URL: 212.67.31.179:3000
+      BASE_BACKEND_URL: 212.67.31.179:5002
       BASE_ADMIN_PASSWORD: baseadmin
       BASE_ADMIN_EMAIL: baseadmin@gmail.com
       DEBUG: false
@@ -34,9 +34,9 @@ services:
     ports:
       - 5011:5011
     environment:
-      RABBITMQ_USER: admin
-      RABBITMQ_PASSWORD: admin
-      RABBITMQ_HOST: rabbitmq:5672
+      RABBITMQ_USER: rabbit
+      RABBITMQ_PASSWORD: rabbit
+      RABBITMQ_HOST: rudakov_aa.guep
       RABBITMQ_QUEUE_NAME: smtpService
 
       MAIL_HOST: smtp.mail.ru
@@ -45,7 +45,6 @@ services:
       MAIL_FROM: zemanqwerty.smtp@mail.ru
     restart: unless-stopped
     depends_on:
-     - db
 
   # web-client:
   #   image: zemanqwerty/oke-lk-service:web-client
@@ -53,23 +52,23 @@ services:
   #     - 3010:3010
   #   restart: unless-stopped
 
-  db:
-    image:  postgres:16
-    ports:
-      - 32700:5432
-    volumes:
-      - data:/var/lib/postgresql/data
-    # command: postgres -c stats_temp_directory=/tmp
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: perscab
-    restart: unless-stopped
-    healthcheck:
-      test: "pg_isready -h db"
-      interval: 3s
-      timeout: 5s
-      retries: 5
+  # db:
+  #   image:  postgres:16
+  #   ports:
+  #     - 32700:5432
+  #   volumes:
+  #     - data:/var/lib/postgresql/data
+  #   # command: postgres -c stats_temp_directory=/tmp
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: root
+  #     POSTGRES_DB: perscab
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: "pg_isready -h db"
+  #     interval: 3s
+  #     timeout: 5s
+  #     retries: 5
 
   # rabbitmq:
   #   image: rabbitmq:3-management
