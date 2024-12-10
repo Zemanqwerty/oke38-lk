@@ -28,7 +28,7 @@ export class Documents {
 
   @Column({
     name: 'date_doc_add',
-    nullable: false,
+    nullable: true,
     type: 'timestamp'
   })
   date_doc_add: Date;
@@ -36,14 +36,14 @@ export class Documents {
   @Column({
     name: 'doc_file_name',
     type: 'varchar',
-    nullable: false
+    nullable: true
   })
   doc_file_name: string;
 
   @Column({
     name: 'doc_file_path',
     type: 'varchar',
-    nullable: false
+    nullable: true
   })
   doc_file_path: string;
 
@@ -51,13 +51,16 @@ export class Documents {
 //   
 // relation
 // 
-  @Column()
+  @Column({
+    nullable: true
+  })
   id_chatrec: string;
 
 
   @Column({
     name: 'is_temp',
-    type: 'boolean'
+    type: 'boolean',
+    nullable: true
   })
   is_temp: boolean;
 

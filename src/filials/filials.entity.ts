@@ -1,4 +1,4 @@
-import { Predstavitel } from 'src/docsFiles/predstavitel.entity';
+import { Predstavitel } from '../docsFiles/predstavitel.entity';
 import { Applications } from '../applications/applications.entity';
 import { Role } from '../roles/roles.enum';
 import { Users } from '../users/users.entity';

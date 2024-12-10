@@ -7,7 +7,7 @@ import { Doctype } from './doctype.entity';
 import { Contract } from './contract.entity';
 import { ContractDoc } from './contractdoc.entity';
 import { ContractSatatus } from './contractstatus.entity';
-import { FilialsModule } from 'src/filials/filials.module';
+import { FilialsModule } from '../filials/filials.module';
 
 @Module({
   imports: [

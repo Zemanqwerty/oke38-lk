@@ -1,9 +1,9 @@
-import { GpFilial } from 'src/docsFiles/gpFilial.entity';
+import { GpFilial } from '../docsFiles/gpFilial.entity';
 import { Applications } from '../applications/applications.entity';
 import { Role } from '../roles/roles.enum';
 import { Users } from '../users/users.entity';
 import { ManyToMany, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
-import { DogovorEnergo } from 'src/docsFiles/dogovorenergo.entity';
+import { DogovorEnergo } from '../docsFiles/dogovorenergo.entity';
 
 @Entity({
     name: 'tblgp'

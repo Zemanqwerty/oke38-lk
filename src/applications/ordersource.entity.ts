@@ -15,11 +15,13 @@ export class OrderSource {
 
   @Column({
     name: 'caption_ordersource',
+    nullable: true
   })
   caption_ordersource: string;
 
   @Column({
     name: 'caption_ordersource_short',
+    nullable: true
   })
   caption_ordersource_short: string;
 

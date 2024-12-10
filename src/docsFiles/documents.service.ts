@@ -4,7 +4,7 @@ import { Documents } from './documents.entity';
 import { Repository } from 'typeorm';
 import { Doctype } from './doctype.entity';
 import { ApplicationFiles } from 'src/dtos/applications/ApplicationFiles.dto';
-import { Applications } from 'src/applications/applications.entity';
+import { Applications } from '../applications/applications.entity';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()

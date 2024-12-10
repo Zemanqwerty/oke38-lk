@@ -5,7 +5,7 @@ import { Applications } from './applications.entity';
 import { ApplicationsService } from './applications.service';
 import { ApplicationsController } from './applications.controller';
 import { FilesModule } from 'src/files/files.module';
-import { Files } from 'src/files/Files.entity';
+import { Files } from '../files/Files.entity';
 import { FilesService } from 'src/files/files.service';
 import { ChatModule } from 'src/chat/chat.module';
 import { CenovayaKategoriya } from './cenovayakategoriya.entity';

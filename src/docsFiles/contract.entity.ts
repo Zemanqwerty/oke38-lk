@@ -25,7 +25,8 @@ export class Contract {
   application: Applications;
 
   @Column({
-    name: 'contract_number_1c'
+    name: 'contract_number_1c',
+    nullable: true
   })
   contract_number_1c: string;
 

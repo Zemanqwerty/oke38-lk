@@ -12,7 +12,7 @@ export class Doctype {
 
   @Column({
     name: 'caption_doctype',
-    nullable: false
+    nullable: true
   })
   caption_doctype: string;
 

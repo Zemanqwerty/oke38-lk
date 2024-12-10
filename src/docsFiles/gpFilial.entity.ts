@@ -1,6 +1,6 @@
 import { OneToOne, JoinColumn, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
 import { Documents } from './documents.entity';
-import { Gp } from 'src/applications/gp.entity';
+import { Gp } from '../applications/gp.entity';
 
 @Entity({
   name: 'tblgp_filial'

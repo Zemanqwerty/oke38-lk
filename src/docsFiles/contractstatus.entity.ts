@@ -13,13 +13,14 @@ export class ContractSatatus {
 
   @Column({
     name: 'caption_contractstatus',
-    nullable: false
+    nullable: true
   })
   caption_contractstatus: string;
 
   @Column({
     name: 'id_contractstatus_1c',
     type: 'bytea',
+    nullable: true
   })
   id_contractstatus_1c: Buffer
 

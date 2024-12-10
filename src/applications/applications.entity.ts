@@ -10,7 +10,7 @@ import { stat } from 'fs';
 import { Documents } from '../docsFiles/documents.entity';
 import { Contract } from '../docsFiles/contract.entity';
 import { OrderSource } from './ordersource.entity';
-import { DogovorEnergo } from 'src/docsFiles/dogovorenergo.entity';
+import { DogovorEnergo } from '../docsFiles/dogovorenergo.entity';
 
 @Entity({
   name: 'tblzayavka'

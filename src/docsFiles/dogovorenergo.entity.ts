@@ -1,10 +1,10 @@
 import { OneToOne, JoinColumn, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
 import { Documents } from './documents.entity';
-import { Filials } from 'src/filials/filials.entity';
-import { Applications } from 'src/applications/applications.entity';
+import { Filials } from '../filials/filials.entity';
+import { Applications } from '../applications/applications.entity';
 import { Predstavitel } from './predstavitel.entity';
 import { PrichinaDE } from './prichinade.entity';
-import { Gp } from 'src/applications/gp.entity';
+import { Gp } from '../applications/gp.entity';
 
 @Entity({
   name: 'tblgp_dogovorenergo'
@@ -18,7 +18,7 @@ export class DogovorEnergo {
 
   @Column({
     name: 'name_predstavitel',
-    nullable: false
+    nullable: true
   })
   name_predstavitel: string;
 
