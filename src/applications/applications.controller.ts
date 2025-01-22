@@ -73,16 +73,30 @@ export class ApplicationsController {
     //     // return await this.applicationsService.
     // }
 
+    @MessagePattern('1C_AppModified')
+    async applicationFrom1c(data: any) {
+        try {
+            return await this.applicationsService.crateApplicationFrom1c(data);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
     // @EventPattern() // Обработчик для очереди
     // async handleIncomingMessageK(@MicroservicesPayload() data: any) {
     //     console.log('Received message from 1c:', data);
     //     // Здесь вы можете обработать входящее сообщение из очереди K
     // }
 
-    @MessagePattern('1c_queue') // Обработчик для первой очереди
-    handle1cMessage(@MicroservicesPayload() data: any) {
-      console.log('Получено сообщение от 1С:', data);
-      // Здесь вы можете обработать сообщение и отправить ответ, если это необходимо
+    @MessagePattern() // Обработчик для первой очереди
+    async handle1cMessage(@MicroservicesPayload() data: any) {
+      try {
+        console.log('Получено сообщение от 1С:', data);
+        return await this.applicationsService.crateApplicationFrom1c(data);
+      } catch (e) {
+        return e
+      }
     }
 
     @UseGuards(AuthGuard)

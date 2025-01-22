@@ -145,6 +145,88 @@ export class ApplicationsService {
         }
     }
 
+    async saveApplicationFrom1C(applicationData: any): Promise<Applications> {
+        try {
+          // Поиск пользователя по email
+        //   const user = await this.usersRepository.findOne({
+        //     where: { email: applicationData._Fld28849 },
+        //   });
+        
+        const user = await this.usersService.getUserByEmail(applicationData._Fld28849);
+
+          if (!user) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+          }
+    
+          // Поиск типа заявки
+          const applicationType = await this.applicationTypeRepository.findOne({
+            where: { id_zayavkatype: applicationData.VidZayavka },
+          });
+    
+          if (!applicationType) {
+            throw new HttpException('Application type not found', HttpStatus.NOT_FOUND);
+          }
+    
+          // Поиск филиала
+        //   const filial = await this.filialsRepository.findOne({
+        //     where: { caption_filial: applicationData.Filial },
+        //   });
+          
+        const filial = await this.filialService.getFilialByCaption(applicationData.Filial);
+
+          if (!filial) {
+            throw new HttpException('Filial not found', HttpStatus.NOT_FOUND);
+          }
+    
+          // Поиск статуса заявки
+          const status = await this.zayavkaStatusReposytory.findOne({
+            where: { id_zayavkastatus_1c: Buffer.from(applicationData._Fld26210RRef) },
+          });
+    
+          if (!status) {
+            throw new HttpException('Status not found', HttpStatus.NOT_FOUND);
+          }
+    
+          // Поиск источника заявки
+          const orderSource = await this.orderSourceRepository.findOne({
+            where: { id_ordersource: applicationData.id_ordersource },
+          });
+    
+          if (!orderSource) {
+            throw new HttpException('Order source not found', HttpStatus.NOT_FOUND);
+          }
+    
+          // Создание новой заявки
+          const newApplication = new Applications();
+          newApplication.uuid = applicationData._Fld31302;
+          newApplication.user = user;
+          newApplication.id_zayavkatype = applicationType;
+          newApplication.filial = filial;
+          newApplication.applicationNumber = applicationData._Fld26403;
+          newApplication.applicationDate = new Date();
+          newApplication.status = status;
+          newApplication.address = applicationData._Fld26201;
+          newApplication.maxPower = applicationData._Fld26206;
+          newApplication.powerLevel = Buffer.from(applicationData.UrovenU);
+          newApplication.id_ordersource = orderSource;
+          newApplication.is_vremennaya = applicationData._Fld27973 === 1;
+          newApplication.v1c_statuszayavki = Buffer.from(applicationData._Fld26210RRef);
+          newApplication.v1c_statusoplaty = Buffer.from(applicationData._Fld36564RRef);
+          newApplication.v1c_nomerdogovora = applicationData.D_1C_Nomer;
+          newApplication.v1c_datadogovora = applicationData.D_1C_Data;
+          newApplication.v1c_statusdogovora = Buffer.from(applicationData.D_1C_Status);
+          newApplication.v1c_epu = applicationData._Fld26200;
+          newApplication.v1c_zayavitel = applicationData._Fld26191;
+          newApplication.date_copy_from1c = new Date();
+    
+          // Сохранение заявки в БД
+          return await this.applicationsReposytory.save(newApplication);
+        } catch (e) {
+          console.log(e);
+          throw new HttpException('Error saving application', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+      }
+
     // async createFrom1C(applicationData: Applications) {
     //     const appliPaymentsOption = await this.vidRassrochkiReposytory.findOne({
     //         where: {
