@@ -85,18 +85,18 @@ export class ApplicationsService {
         @Inject('APPLICAITIONS_TO_1C_SERVICE') private application1cService: ClientProxy
     ) {};
 
-    async getAllDogovorenergoForApplications(userData: Payload) {
+    async getAllDogovorenergoForApplications(userData: Payload, pageNumber: number) {
         const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
 
         if (user.id_userrole.caption_userrole !== Role.Admin) {
             throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
         }
 
-        const allDogovorEnergo = await this.documentsService.getAllDogovorenergo();
+        const allDogovorEnergo = await this.documentsService.getAllDogovorenergo(pageNumber);
 
-        return allDogovorEnergo.map((dogovor) => {
+        return Promise.all(allDogovorEnergo.map((dogovor) => {
             return new DogovorEnergoDto(dogovor);
-        })
+        }))
     }
 
     async sendApplicationTo1c(userData: Payload, applicationUUID: string) {
@@ -117,7 +117,7 @@ export class ApplicationsService {
                     filial: true,
                 },
                 where: {
-                    uuid: applicationUUID
+                    id_zayavka: applicationUUID
                 }
             })
             return await this.application1cService.send(
@@ -134,7 +134,7 @@ export class ApplicationsService {
                     _Fld26434: application.user.id_usertype.id_usertype == 2 ? 1 : 0,                    //Z.флЯвляетсяИП КАК _Fld26434
                     _Fld27973: application.is_vremennaya == true ? 1 : 0,            //Z.флВременнаяСхема КАК _Fld27973
                     _Fld28849: application.user.email,                                       //Z.ЭлектроннаяПочта КАК _Fld28849
-                    _Fld31302: application.uuid.toString(),                    //Z.ИДЗаявкиЛК КАК _Fld31302
+                    _Fld31302: application.id_zayavka.toString(),                    //Z.ИДЗаявкиЛК КАК _Fld31302
                     _Fld36564RRef: "",                                             //Z.СтатусОплаты КАК _Fld36564RRef
                     //D_1C_Nomer: "",                                                //ЕстьNULL(D.НомерДоговораИтоговый, """") AS D_1C_Nomer
                     //D_1C_Status: "",                                               //D.СостояниеДоговораТП AS D_1C_Status
@@ -213,7 +213,7 @@ export class ApplicationsService {
     
           // Создание новой заявки
           const newApplication = new Applications();
-          newApplication.uuid = applicationData._Fld31302;
+          newApplication.id_zayavka = applicationData._Fld31302;
           newApplication.user = user;
           newApplication.id_zayavkatype = applicationType;
           newApplication.filial = filial;
@@ -339,7 +339,7 @@ export class ApplicationsService {
         
         const newApplication = this.applicationsReposytory.create({
             id_zayavkatype: applicatyonType,
-            uuid: uuidv4(),
+            id_zayavka: uuidv4(),
             paymentsOption: appliPaymentsOption.idrref,
             address: appliAddress,
             powerLevel: appliEnumUrovenU.idrref,
@@ -367,7 +367,7 @@ export class ApplicationsService {
                 user: true
             },
             where: {
-                uuid: applicationUuid,
+                id_zayavka: applicationUuid,
                 user: {
                     id_user: user.id_user
                 }
@@ -506,7 +506,7 @@ export class ApplicationsService {
                 user: true,
             },
             where: {
-                uuid: applicationId
+                id_zayavka: applicationId
             }
         });
 
@@ -771,7 +771,7 @@ export class ApplicationsService {
 
         const application = await this.applicationsReposytory.findOne({
             where: {
-                uuid: applicationId
+                id_zayavka: applicationId
             }
         });
 
@@ -804,13 +804,17 @@ export class ApplicationsService {
 
         const application = await this.applicationsReposytory.findOne({
             where: {
-                uuid: applicationId
+                id_zayavka: applicationId
             }
         });
 
         if (data?.number) {
             application.applicationNumber = data.number;
         };
+
+        if (data?.date) {
+            application.applicationDate = data.date;
+        }
 
         if (data?.status) {
             const v1c_statuszayavki = await this.zayavkaStatusReposytory.findOne({
@@ -828,7 +832,7 @@ export class ApplicationsService {
     async getApplicationById(applicationUuid: string) {
         return await this.applicationsReposytory.findOne({
             where: {
-                uuid: applicationUuid
+                id_zayavka: applicationUuid
             }
         })
     }

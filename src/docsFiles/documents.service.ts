@@ -6,11 +6,7 @@ import { Doctype } from './doctype.entity';
 import { ApplicationFiles } from 'src/dtos/applications/ApplicationFiles.dto';
 import { Applications } from '../applications/applications.entity';
 import { v4 as uuidv4 } from 'uuid';
-import { Payload } from 'src/dtos/auth/Payload.dto';
-import { UsersService } from 'src/users/users.service';
-import { Role } from 'src/roles/roles.enum';
 import { DogovorEnergo } from './dogovorenergo.entity';
-import { stat } from 'fs';
 
 @Injectable()
 export class DocumentsService {
@@ -21,16 +17,19 @@ export class DocumentsService {
         private doctypeRepository: Repository<Doctype>,
         @InjectRepository(DogovorEnergo)
         private dogovorenergoRepository: Repository<DogovorEnergo>,
-
-
-        
     ) {};
 
-    async getAllDogovorenergo() {
+    async getAllDogovorenergo(pageNumber: number) {
+        const skip = (pageNumber - 1) * 20;
+        const take = 20;
+
         return await this.dogovorenergoRepository.find({
             relations: {
                 id_zayavka: {user: true, status: true}
-            }
+            },
+            order: { date_create_de: 'DESC' },
+            skip,
+            take
         });
     }
 
@@ -71,7 +70,7 @@ export class DocumentsService {
             },
             where: {
                 application: {
-                    uuid: uuid
+                    id_zayavka: uuid
                 }
             }
         })

@@ -111,9 +111,9 @@ export class ApplicationsController {
 
     @UseGuards(AuthGuard)
     @Get('dogovorenergo')
-    async getAllDogovorenergoForApplications(@Req() request: Request) {
+    async getAllDogovorenergoForApplications(@Req() request: Request, @Query('page') page: number) {
         try {
-            return await this.applicationsService.getAllDogovorenergoForApplications(request['user']);
+            return await this.applicationsService.getAllDogovorenergoForApplications(request['user'], page);
         } catch (e) {
             console.log(e);
             return e

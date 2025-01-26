@@ -22,7 +22,7 @@ export class MessagesController {
     @Get(':id/get')
     async logout(@Req() request: Request, @Param() params: any) {
         try {
-            // return await this.messagesService.getAllMessagesInChat(params.id)
+            return await this.messagesService.getAllMessagesInChat(params.id)
         } catch (e) {
             console.log(e);
             return e
@@ -52,7 +52,7 @@ export class MessagesController {
     async create(@Req() request: Request, @UploadedFiles() files: MessagesFiles, @Body() fileData: MessagesFileData, @Param() params: any) {
         try {
             console.log(files);
-            // return await this.messagesService.saveMessagesFiles(files, fileData.userRole, fileData.user, params.id);
+            return await this.messagesService.saveMessagesFiles(files, fileData.userRole, fileData.user, params.id);
         } catch (e) {
             console.log(e);
             return e

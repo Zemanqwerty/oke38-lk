@@ -40,7 +40,7 @@ export class ApplicationsResponse {
         provider: string | null,
         reason: string | null)
     {
-        this.uuid = model.uuid
+        this.uuid = model.id_zayavka
         this.userFirstName = model.user.firstname
         this.userLastName = model.user.lastname
         this.userSurname = model.user.surname

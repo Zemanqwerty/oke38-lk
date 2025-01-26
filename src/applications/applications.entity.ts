@@ -20,7 +20,7 @@ export class Applications {
     name: 'id_zayavka',
     type: 'uuid'
   })
-  uuid: string;
+  id_zayavka: string;
 
   // @Column()
   // @Generated("uuid")

@@ -30,16 +30,16 @@ export class ChatService {
         return await this.chatRepository.save(newChat);
     }
 
-    // async getChatById(chatId: number) {
-    //     return await this.chatRepository.findOne({
-    //         relations: {
-    //             application: true
-    //         },
-    //         where: {
-    //             application: {
-    //                 id: chatId
-    //             }
-    //         }
-    //     })
-    // }
+    async getChatById(chatId: string) {
+        return await this.chatRepository.findOne({
+            relations: {
+                application: true
+            },
+            where: {
+                application: {
+                    id_zayavka: chatId
+                }
+            }
+        })
+    }
 }

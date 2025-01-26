@@ -30,70 +30,78 @@ export class MessagesService {
         private messageRepository: Repository<Message>,
     ) {};
 
-    // async createMessage(message: string, userRole: Role, user: string, chatId: number) {
-    //     const chat = await this.chatService.getChatById(chatId);
+    async createMessage(message: string, userRole: Role, user: string, chatId: string) {
+        let chat = await this.chatService.getChatById(chatId);
+        console.log(chatId);
 
-    //     if (!chat) {
-    //         await this.applicationService.getApplicationById(chatId).then((application) => {
-    //             this.chatService.createChat(application);
-    //         })
-    //     }
+        if (!chat) {
+            const application = await this.applicationService.getApplicationById(chatId);
+            if (application) {
+              chat = await this.chatService.createChat(application); // Обновляем переменную chat
+            } else {
+              throw new Error('Application not found'); // Обработка случая, если заявка не найдена
+            }
+        }
 
-    //     const newMessage = this.messageRepository.create({
-    //         messageText: message,
-    //         senderRole: userRole,
-    //         sender: user,
-    //         chat: chat,
-    //     });
+        console.log('--');
+        console.log(chat);
+        console.log('--');
 
-    //     return await this.messageRepository.save(newMessage);
-    // }
+        const newMessage = this.messageRepository.create({
+            messageText: message,
+            senderRole: userRole,
+            sender: user,
+            chat: chat,
+        });
 
-    // async saveMessagesFiles(files: MessagesFiles, userRole: Role, user: string, chatId: number) {
-    //     const chat = await this.chatService.getChatById(chatId);
+        return await this.messageRepository.save(newMessage);
+    }
 
-    //     if (!chat) {
-    //         await this.applicationService.getApplicationById(chatId).then((application) => {
-    //             this.chatService.createChat(application);
-    //         })
-    //     }
+    async saveMessagesFiles(files: MessagesFiles, userRole: Role, user: string, chatId: string) {
+        const chat = await this.chatService.getChatById(chatId);
 
-    //     console.log(files);
+        if (!chat) {
+            await this.applicationService.getApplicationById(chatId).then((application) => {
+                this.chatService.createChat(application);
+            })
+        }
 
-    //     return files.files.map(async (file) => {
-    //         const newFile = this.messageRepository.create({
-    //             fileName: file.filename,
-    //             fileUrl: file.path,
-    //             senderRole: userRole,
-    //             sender: user,
-    //             chat: chat
-    //         })
+        console.log(files);
 
-    //         await this.messageRepository.save(newFile)
+        return files.files.map(async (file) => {
+            const newFile = this.messageRepository.create({
+                fileName: file.filename,
+                fileUrl: file.path,
+                senderRole: userRole,
+                sender: user,
+                chat: chat
+            })
 
-    //         return this.messageGateway.sendFileMessage(chatId.toString(), new ResponseMessages(newFile))
-    //     })
-    // }
+            await this.messageRepository.save(newFile)
 
-    // async getAllMessagesInChat(chatId: string) {
-    //     const messages = await this.messageRepository.find({
-    //         relations: {
-    //             chat: true
-    //         },
-    //         where: {
-    //             chat: {
-    //                 application: {
-    //                     id: parseInt(chatId)
-    //                 }
-    //             }
-    //         },
-    //         order: {
-    //             createdAt: 'ASC'
-    //         }
-    //     })
+            return this.messageGateway.sendFileMessage(chatId.toString(), new ResponseMessages(newFile))
+        })
+    }
 
-    //     return messages.map((message) => {
-    //         return new ResponseMessages(message);
-    //     })
-    // }
+    async getAllMessagesInChat(chatId: string) {
+        const messages = await this.messageRepository.find({
+            relations: {
+                chat: true
+            },
+            where: {
+                chat: {
+                    application: {
+                        id_zayavka: chatId
+                    }
+                }
+            },
+            order: {
+                createdAt: 'ASC'
+            }
+        })
+
+        return messages.map((message) => {
+            return new ResponseMessages(message);
+        })
+    }
 }

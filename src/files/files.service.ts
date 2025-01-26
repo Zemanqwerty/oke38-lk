@@ -46,7 +46,7 @@ export class FilesService {
             },
             where: {
                 application: {
-                    uuid: uuid
+                    id_zayavka: uuid
                 }
             }
         })

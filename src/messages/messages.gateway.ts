@@ -46,36 +46,40 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     client.emit('leftRoom', room);
   }
 
-  // @SubscribeMessage('message')
-  // handleMessage(client: Socket, message: any) {
-  //   console.log('----');
-  //   console.log(message);
-  //   console.log(message.room);
-  //   console.log('----');
-  //   this.createMessage(message.message, message.userRole, message.user, parseInt(message.room))
-  //   this.server.to(message.room).emit('message', message);
-  // }
+  @SubscribeMessage('message')
+  handleMessage(client: Socket, message: any) {
+    console.log('----');
+    console.log(message);
+    console.log(message.room);
+    console.log('----');
+    this.createMessage(message.message, message.userRole, message.user, message.room)
+    this.server.to(message.room).emit('message', message);
+  }
 
-  // sendFileMessage(room: string, message: ResponseMessages) {
-  //   this.server.to(room).emit('message', message); 
-  // }
+  sendFileMessage(room: string, message: ResponseMessages) {
+    this.server.to(room).emit('message', message); 
+  }
 
-  // async createMessage(message: string, userRole: Role, user: string, chatId: number) {
-  //     const chat = await this.chatService.getChatById(chatId);
+  async createMessage(message: string, userRole: Role, user: string, chatId: string) {
+    let chat = await this.chatService.getChatById(chatId);
+    console.log(chatId);
 
-  //     if (!chat) {
-  //         await this.applicationService.getApplicationById(chatId).then((application) => {
-  //             this.chatService.createChat(application);
-  //         })
-  //     }
+    if (!chat) {
+        const application = await this.applicationService.getApplicationById(chatId);
+        if (application) {
+          chat = await this.chatService.createChat(application); // Обновляем переменную chat
+        } else {
+          throw new Error('Application not found'); // Обработка случая, если заявка не найдена
+        }
+    }
 
-  //     const newMessage = this.messageRepository.create({
-  //         messageText: message,
-  //         senderRole: userRole,
-  //         sender: user,
-  //         chat: chat,
-  //     });
+      const newMessage = this.messageRepository.create({
+          messageText: message,
+          senderRole: userRole,
+          sender: user,
+          chat: chat,
+      });
 
-  //     return await this.messageRepository.save(newMessage);
-  // }
+      return await this.messageRepository.save(newMessage);
+  }
 }
