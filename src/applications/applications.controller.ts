@@ -18,7 +18,6 @@ import { Payload } from "src/dtos/auth/Payload.dto";
 import { SetApplicationFilial } from "src/dtos/applications/SetApplicationFilial.dto";
 import { SetApplicationNumberStatus } from "src/dtos/applications/SetApplicationNumberStatus";
 import { MessagePattern, RmqContext, Payload as MicroservicesPayload, Ctx, EventPattern } from "@nestjs/microservices";
-import { Applications } from "./applications.entity";
 
 
 
@@ -73,15 +72,15 @@ export class ApplicationsController {
     //     // return await this.applicationsService.
     // }
 
-    @MessagePattern('1C_AppModified')
-    async applicationFrom1c(data: any) {
-        try {
-            return await this.applicationsService.crateApplicationFrom1c(data);
-        } catch (e) {
-            console.log(e);
-            return e
-        }
-    }
+    // @MessagePattern('1C_AppModified')
+    // async applicationFrom1c(data: any) {
+    //     try {
+    //         return await this.applicationsService.crateApplicationFrom1c(data);
+    //     } catch (e) {
+    //         console.log(e);
+    //         return e
+    //     }
+    // }
 
     // @EventPattern() // Обработчик для очереди
     // async handleIncomingMessageK(@MicroservicesPayload() data: any) {
@@ -93,7 +92,7 @@ export class ApplicationsController {
     async handle1cMessage(@MicroservicesPayload() data: any) {
       try {
         console.log('Получено сообщение от 1С:', data);
-        return await this.applicationsService.crateApplicationFrom1c(data);
+        return await this.applicationsService.saveApplicationFrom1C(data);
       } catch (e) {
         return e
       }
@@ -104,6 +103,17 @@ export class ApplicationsController {
     async sendApplicationTo1C(@Req() request: Request, @Param() params: any) {
         try {
             return await this.applicationsService.sendApplicationTo1c(request['user'], params.uuid);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('dogovorenergo')
+    async getAllDogovorenergoForApplications(@Req() request: Request) {
+        try {
+            return await this.applicationsService.getAllDogovorenergoForApplications(request['user']);
         } catch (e) {
             console.log(e);
             return e

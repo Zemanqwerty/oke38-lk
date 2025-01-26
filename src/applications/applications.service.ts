@@ -35,6 +35,7 @@ import {v4 as uuidv4} from 'uuid';
 import { ApplicationTypes } from "./zayavkatype.entity";
 import { ClientProxy } from "@nestjs/microservices";
 import { OrderSource } from "./ordersource.entity";
+import { DogovorEnergoDto } from "src/dtos/applications/DogovorEnergo.dto";
 
 
 @Injectable()
@@ -83,6 +84,20 @@ export class ApplicationsService {
 
         @Inject('APPLICAITIONS_TO_1C_SERVICE') private application1cService: ClientProxy
     ) {};
+
+    async getAllDogovorenergoForApplications(userData: Payload) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
+        }
+
+        const allDogovorEnergo = await this.documentsService.getAllDogovorenergo();
+
+        return allDogovorEnergo.map((dogovor) => {
+            return new DogovorEnergoDto(dogovor);
+        })
+    }
 
     async sendApplicationTo1c(userData: Payload, applicationUUID: string) {
         const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);

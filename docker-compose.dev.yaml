@@ -33,7 +33,7 @@ services:
 
       MAIL_HOST: smtp.mail.ru
       MAIL_USER: zemanqwerty.smtp@mail.ru
-      MAIL_PASSWORD: 7GZVptRN0jg7TEC8suk8
+      MAIL_PASSWORD: PQZLtcNY0UTjffjLwm2n
       MAIL_FROM: zemanqwerty.smtp@mail.ru
     restart: unless-stopped
     depends_on:

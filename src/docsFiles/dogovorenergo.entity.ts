@@ -16,11 +16,11 @@ export class DogovorEnergo {
   })
   id_dogovorenergo: string;
 
-  @Column({
-    name: 'name_predstavitel',
-    nullable: true
-  })
-  name_predstavitel: string;
+  // @Column({
+  //   name: 'name_predstavitel',
+  //   nullable: true
+  // })
+  // name_predstavitel: string;
 
   @ManyToOne(() => Applications, (application) => application.dogovorenergo)
   @JoinColumn({name: 'id_zayavka'})

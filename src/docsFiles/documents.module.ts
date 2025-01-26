@@ -7,11 +7,11 @@ import { Doctype } from './doctype.entity';
 import { Contract } from './contract.entity';
 import { ContractDoc } from './contractdoc.entity';
 import { ContractSatatus } from './contractstatus.entity';
-import { FilialsModule } from '../filials/filials.module';
+import { DogovorEnergo } from './dogovorenergo.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Documents, Doctype, Contract, ContractDoc, ContractSatatus]),
+    TypeOrmModule.forFeature([Documents, Doctype, Contract, ContractDoc, ContractSatatus, DogovorEnergo]),
   ],
   providers: [DocumentsService],
   controllers: [DocumentsController],

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Documents } from './documents.entity';
 import { Repository } from 'typeorm';
@@ -6,6 +6,11 @@ import { Doctype } from './doctype.entity';
 import { ApplicationFiles } from 'src/dtos/applications/ApplicationFiles.dto';
 import { Applications } from '../applications/applications.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { Payload } from 'src/dtos/auth/Payload.dto';
+import { UsersService } from 'src/users/users.service';
+import { Role } from 'src/roles/roles.enum';
+import { DogovorEnergo } from './dogovorenergo.entity';
+import { stat } from 'fs';
 
 @Injectable()
 export class DocumentsService {
@@ -14,8 +19,20 @@ export class DocumentsService {
         private docsRepositiry: Repository<Documents>,
         @InjectRepository(Doctype)
         private doctypeRepository: Repository<Doctype>,
+        @InjectRepository(DogovorEnergo)
+        private dogovorenergoRepository: Repository<DogovorEnergo>,
+
+
         
     ) {};
+
+    async getAllDogovorenergo() {
+        return await this.dogovorenergoRepository.find({
+            relations: {
+                id_zayavka: {user: true, status: true}
+            }
+        });
+    }
 
     async getFileType(fileTypeCaption: string) {
         console.log(fileTypeCaption);
