@@ -36,6 +36,10 @@ import { ApplicationTypes } from "./zayavkatype.entity";
 import { ClientProxy } from "@nestjs/microservices";
 import { OrderSource } from "./ordersource.entity";
 import { DogovorEnergoDto } from "src/dtos/applications/DogovorEnergo.dto";
+import { EditDogovorEnergoData } from "src/dtos/applications/SetDogovorEnergo.dto";
+import { ContractResponseDto } from "src/dtos/applications/ContractResponse.dto";
+import { DogovorFilesDto } from "src/dtos/applications/DogovorFiles.dto";
+import { ContractFilesDto } from "src/dtos/applications/ContractFiles.dto";
 
 
 @Injectable()
@@ -97,6 +101,59 @@ export class ApplicationsService {
         return Promise.all(allDogovorEnergo.map((dogovor) => {
             return new DogovorEnergoDto(dogovor);
         }))
+    }
+
+    async getDogovorenergoByApplicationId(userData: Payload, id: string) {
+        console.log(id);
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
+        }
+
+        const dogovorEnergo = await this.documentsService.getDogovorEnergoByApplicationId(id);
+
+        return new DogovorEnergoDto(dogovorEnergo);
+    }
+
+    async editDogovorEnergoDataByApplicationId(userData: Payload, applicationId: string, dogovorData: EditDogovorEnergoData){
+        console.log(dogovorData);
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
+        }
+
+        const dogovor = await this.documentsService.getDogovorEnergoByApplicationId(applicationId);
+        const application = await this.applicationsReposytory.findOne({
+            where: {
+                id_zayavka: applicationId
+            }
+        });
+
+        if (!dogovor) {
+            return await this.documentsService.createNewDogovorEnergo(dogovorData, application);
+        }
+
+        return await this.documentsService.setDogovorEnergoData(dogovorData, application);
+    }
+
+    async getContractDataByApplicationId(userData: Payload, applicationId: string) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
+        }
+
+        const application = await this.applicationsReposytory.findOne({
+            where: {
+                id_zayavka: applicationId
+            }
+        })
+
+        const contract = await this.documentsService.getContractDataByApplication(application);
+        console.log(contract);
+        return new ContractResponseDto(contract);
     }
 
     async sendApplicationTo1c(userData: Payload, applicationUUID: string) {
@@ -295,6 +352,44 @@ export class ApplicationsService {
 
     //     return newApplication;
     // }
+
+    async setDogovorFiles(userData: Payload, files: DogovorFilesDto, applicationId: string) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
+        }
+
+        const application = await this.applicationsReposytory.findOne({
+            where: {
+                id_zayavka: applicationId
+            }
+        })
+
+        return await this.documentsService.setDogovorFilesByApplication(application, files);
+    }
+
+    async getDogovorFiles(userData: Payload, applicationId: string) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+        const application = await this.applicationsReposytory.findOne({
+            relations: {
+                user: true,
+            },
+            where: {
+                id_zayavka: applicationId
+            }
+        });
+
+        if (application.user.id_user !== user.id_user && user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('permission denied', HttpStatus.FORBIDDEN);
+        }
+
+        const files = await this.documentsService.getDogovorFilesByApplicationId(applicationId);
+
+        return files.map((file) => {
+            return new ContractFilesDto(file);
+        })
+    }
 
     async create(userDate: Payload, files: ApplicationFiles, applicationData: CreateApplication) {
         const user = await this.usersService.getUserByEmail(userDate.publickUserEmail);
@@ -657,14 +752,14 @@ export class ApplicationsService {
 
     async getAllApplications(userData: Payload, pageNumber: number) {
         const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
-
+    
         if (user.id_userrole.caption_userrole !== Role.Admin) {
-            throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
-        };
-
+            throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
+        }
+    
         const skip = (pageNumber - 1) * 20;
         const take = 20;
-
+    
         const applications = await this.applicationsReposytory.find({
             relations: {
                 user: true,
@@ -673,60 +768,59 @@ export class ApplicationsService {
             order: { createdAt: 'DESC' },
             skip,
             take
-        })
-
-        console.log(applications);
-
+        });
+    
         return Promise.all(applications.map(async (application) => {
             const id1c_enumurovenu = await this.enumUReposytory.findOne({
                 where: {
                     idrref: application.powerLevel
                 }
-            })
-
+            });
+    
             const id1c_cenovayakategoriya = await this.cenKatReposytory.findOne({
                 where: {
                     idrref: application.id1c_cenovayakategoriya
                 }
-            })
-
+            });
+    
             const id1c_vidrassrochki = await this.vidRassrochkiReposytory.findOne({
                 where: {
                     idrref: application.paymentsOption
                 }
-            })
-
+            });
+    
             const id1c_vidzayavki = await this.vidZayavkiReposytory.findOne({
                 where: {
                     idrref: application.id1c_vidzayavki
                 }
-            })
-
+            });
+    
             const id1c_statusoplaty = await this.statusOplatyReposytory.findOne({
                 where: {
                     idrref: application.paymantStatus
                 }
-            })
-
+            });
+    
             const v1c_statuszayavki = await this.zayavkaStatusReposytory.findOne({
                 where: {
                     id_zayavkastatus_1c: application.v1c_statuszayavki
                 }
-            })
-
+            });
+    
             const appliProvider = await this.gpRepository.findOne({
                 where: {
                     id_gp: application.provider
                 }
-            })
-
+            });
+    
             const appliPrichinapodachi = await this.prichinaPodachiRepository.findOne({
                 where: {
                     id_prichinapodachiz: application.reason
                 }
-            })
-
-            console.log(new ApplicationsResponse(application,
+            });
+    
+            return new ApplicationsResponse(
+                application,
                 id1c_enumurovenu.caption_long,
                 id1c_cenovayakategoriya.caption_long,
                 id1c_vidrassrochki.caption_long,
@@ -734,18 +828,105 @@ export class ApplicationsService {
                 id1c_statusoplaty.caption_long,
                 v1c_statuszayavki.caption_zayavkastatus,
                 appliProvider.caption_gp,
-                appliPrichinapodachi.caption_long))
-
-            return new ApplicationsResponse(application,
-                                            id1c_enumurovenu.caption_long,
-                                            id1c_cenovayakategoriya.caption_long,
-                                            id1c_vidrassrochki.caption_long,
-                                            id1c_vidzayavki.caption_long,
-                                            id1c_statusoplaty.caption_long,
-                                            v1c_statuszayavki.caption_zayavkastatus,
-                                            appliProvider.caption_gp,
-                                            appliPrichinapodachi.caption_long);
+                appliPrichinapodachi.caption_long
+            );
         }));
+    }
+
+    async getApplicationById(id: string) {
+        return await this.applicationsReposytory.findOne({
+            where: {
+                id_zayavka: id
+            }
+        })
+    }
+
+    async getApplicationByIdForClient(userData: Payload, applicationUuid: string) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+
+        const application = await this.applicationsReposytory.findOne({
+            relations: {
+                user: true,
+                filial: true
+            },
+            where: {
+                id_zayavka: applicationUuid
+            }
+        })
+
+        if (user.id_userrole.caption_userrole !== Role.Admin && user.id_user !== application.user.id_user) {
+            throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
+        };
+
+        const id1c_enumurovenu = await this.enumUReposytory.findOne({
+            where: {
+                idrref: application.powerLevel
+            }
+        })
+
+        const id1c_cenovayakategoriya = await this.cenKatReposytory.findOne({
+            where: {
+                idrref: application.id1c_cenovayakategoriya
+            }
+        })
+
+        const id1c_vidrassrochki = await this.vidRassrochkiReposytory.findOne({
+            where: {
+                idrref: application.paymentsOption
+            }
+        })
+
+        const id1c_vidzayavki = await this.vidZayavkiReposytory.findOne({
+            where: {
+                idrref: application.id1c_vidzayavki
+            }
+        })
+
+        const id1c_statusoplaty = await this.statusOplatyReposytory.findOne({
+            where: {
+                idrref: application.paymantStatus
+            }
+        })
+
+        const v1c_statuszayavki = await this.zayavkaStatusReposytory.findOne({
+            where: {
+                id_zayavkastatus_1c: application.v1c_statuszayavki
+            }
+        })
+
+        const appliProvider = await this.gpRepository.findOne({
+            where: {
+                id_gp: application.provider
+            }
+        })
+
+        const appliPrichinapodachi = await this.prichinaPodachiRepository.findOne({
+            where: {
+                id_prichinapodachiz: application.reason
+            }
+        })
+
+        console.log(new ApplicationsResponse(application,
+            id1c_enumurovenu.caption_long,
+            id1c_cenovayakategoriya.caption_long,
+            id1c_vidrassrochki.caption_long,
+            id1c_vidzayavki.caption_long,
+            id1c_statusoplaty.caption_long,
+            v1c_statuszayavki.caption_zayavkastatus,
+            appliProvider.caption_gp,
+            appliPrichinapodachi.caption_long))
+
+        return new ApplicationsResponse(
+            application,
+            id1c_enumurovenu.caption_long,
+            id1c_cenovayakategoriya.caption_long,
+            id1c_vidrassrochki.caption_long,
+            id1c_vidzayavki.caption_long,
+            id1c_statusoplaty.caption_long,
+            v1c_statuszayavki.caption_zayavkastatus,
+            appliProvider.caption_gp,
+            appliPrichinapodachi.caption_long
+        );
     }
 
     async getFilialsForApplication(userData: Payload) {
@@ -829,12 +1010,26 @@ export class ApplicationsService {
         return await this.applicationsReposytory.save(application);
     }
 
-    async getApplicationById(applicationUuid: string) {
-        return await this.applicationsReposytory.findOne({
+    async getApplicationWorkingDocs(userData: Payload, applicationUuid: string) {
+        const user = await this.usersService.getUserByEmail(userData.publickUserEmail);
+        const application = await this.applicationsReposytory.findOne({
+            relations: {
+                user: true
+            },
             where: {
                 id_zayavka: applicationUuid
             }
         })
+
+        if (!application) {
+            return new HttpException('Not found', HttpStatus.NOT_FOUND);
+        }
+
+        if (user.id_userrole.caption_userrole !== Role.Admin && user.id_user !== application.user.id_user) {
+            throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
+        };
+
+        return await this.documentsService.getInWorkFiles(applicationUuid);
     }
 
     // async getApplicationById(userData: Payload, id: number) {

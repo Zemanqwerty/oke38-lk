@@ -268,7 +268,7 @@ export class Applications {
   @OneToMany(() => Documents, (documents) => documents.application, {cascade: true})
   documents: Documents[];
 
-  @OneToMany(() => Contract, (contract) => contract.application, {cascade: true})
+  @OneToMany(() => Contract, (contract) => contract.id_zayavka, {cascade: true})
   contract: Contract[];
 
   @OneToMany(() => DogovorEnergo, (dogovorEnergo) => dogovorEnergo.id_zayavka, {cascade: true})

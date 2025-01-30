@@ -13,6 +13,7 @@ export class DogovorEnergoDto {
     dogovorNumber: string;
     schetNumber: string;
     epuNumber: string;
+    applicationId: string;
 
     constructor (
         model: DogovorEnergo
@@ -27,5 +28,6 @@ export class DogovorEnergoDto {
         this.dogovorNumber = model.nomer_dogovorenergo;
         this.schetNumber = model.nomer_ls;
         this.epuNumber = model.nomer_elektroustanovka;
+        this.applicationId = model.id_zayavka.id_zayavka;
     }
 }

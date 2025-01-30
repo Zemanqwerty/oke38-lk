@@ -19,12 +19,12 @@ export class ContractDoc {
   id_contractdoc: string;
 
   @ManyToOne(() => Contract, (contract) => contract.contractDoc, {nullable: false})
-  @JoinColumn({name: 'id_zayavka'})
-  contract: Contract;
+  @JoinColumn({name: 'id_contract'})
+  id_contract: Contract;
 
-  @ManyToOne(() => Doctype, (doctype) => doctype.documents, {nullable: false})
+  @ManyToOne(() => Doctype, (doctype) => doctype.contractDoc, {nullable: false})
   @JoinColumn({name: 'id_doctype'})
-  doctype: Doctype;
+  id_doctype: Doctype;
 
   @Column({
     name: 'date_doc_add',

@@ -22,7 +22,7 @@ export class Contract {
 
   @ManyToOne(() => Applications, (application) => application.contract, {nullable: true})
   @JoinColumn({name: 'id_zayavka'})
-  application: Applications;
+  id_zayavka: Applications;
 
   @Column({
     name: 'contract_number_1c',
@@ -39,9 +39,9 @@ export class Contract {
 
   @ManyToOne(() => ContractSatatus, (contractStatus) => contractStatus.contract, {nullable: true})
   @JoinColumn({name: 'id_contractstatus'})
-  contractStatus: ContractSatatus;
+  id_contractstatus: ContractSatatus;
 
-  @OneToMany(() => ContractDoc, (contractDoc) => contractDoc.contract, {cascade: true})
+  @OneToMany(() => ContractDoc, (contractDoc) => contractDoc.id_contract, {cascade: true})
   contractDoc: ContractDoc[];
 
   @OneToMany(() => Documents, (docs) => docs.id_contract, {cascade: true})

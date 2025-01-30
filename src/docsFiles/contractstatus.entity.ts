@@ -24,6 +24,6 @@ export class ContractSatatus {
   })
   id_contractstatus_1c: Buffer
 
-  @OneToMany(() => Contract, (contract) => contract.contractStatus, {cascade: true})
+  @OneToMany(() => Contract, (contract) => contract.id_contractstatus, {cascade: true})
   contract: Contract[];
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Redirect, Req, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Redirect, Req, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
 import { CreateUser } from "src/dtos/users/CreateUser.dto";
 import { AuthGuard } from "src/auth/auth.middleware";
 import { RequestForResetPassword } from "src/dtos/users/RequestForResetPassword.dto";
@@ -18,12 +18,44 @@ import { Payload } from "src/dtos/auth/Payload.dto";
 import { SetApplicationFilial } from "src/dtos/applications/SetApplicationFilial.dto";
 import { SetApplicationNumberStatus } from "src/dtos/applications/SetApplicationNumberStatus";
 import { MessagePattern, RmqContext, Payload as MicroservicesPayload, Ctx, EventPattern } from "@nestjs/microservices";
+import { EditDogovorEnergoData } from "src/dtos/applications/SetDogovorEnergo.dto";
+import { DogovorFilesDto } from "src/dtos/applications/DogovorFiles.dto";
 
 
 
 @Controller('applications')
 export class ApplicationsController {
     constructor(private readonly applicationsService: ApplicationsService) {};
+
+    @UseGuards(AuthGuard)
+    @Post('dogovorenergo/:id/setfiles')
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'paymentFile', maxCount: 1 },
+        { name: 'dogovorFile', maxCount: 1 },
+      ], {
+        storage: diskStorage({
+            destination: (req, file, callback) => {
+              const user: Payload = req['user'];
+              const destination = `./files/${user.publickUserEmail}`;
+              fs.mkdirSync(destination, {recursive: true});
+              callback(null, destination);
+            },
+            filename: (req, file, callback) => {
+              const uniqueSuffix = Date.now() + '-' + uuidv4();
+              callback(null, `${uniqueSuffix}__${file.originalname}`);
+            },
+          })
+      })
+    )
+    async setDogovorFiles(@Req() request: Request, @UploadedFiles() files: DogovorFilesDto, @Param() params: any) {
+        try {
+            console.log(files);
+            return await this.applicationsService.setDogovorFiles(request['user'], files, params.id);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
 
     @UseGuards(AuthGuard)
     @Post('')
@@ -110,10 +142,43 @@ export class ApplicationsController {
     }
 
     @UseGuards(AuthGuard)
+    @Get('dogovorenergo/:id/files')
+    async getDogovorFiles(@Req() request: Request, @Param() params: any) {
+        try {
+            return await this.applicationsService.getDogovorFiles(request['user'], params.id);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
     @Get('dogovorenergo')
     async getAllDogovorenergoForApplications(@Req() request: Request, @Query('page') page: number) {
         try {
             return await this.applicationsService.getAllDogovorenergoForApplications(request['user'], page);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('dogovorenergo/:id')
+    async getDogovorenergoByApplicationId(@Req() request: Request, @Param('id') id: string) {
+        try {
+            return await this.applicationsService.getDogovorenergoByApplicationId(request['user'], id);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('contract/:id')
+    async getContractByApplicationId(@Req() request: Request, @Param('id') id: string) {
+        try {
+            return await this.applicationsService.getContractDataByApplicationId(request['user'], id);
         } catch (e) {
             console.log(e);
             return e
@@ -155,10 +220,32 @@ export class ApplicationsController {
     }
 
     @UseGuards(AuthGuard)
+    @Post('dogovorenergo/:id/edit')
+    async editDogovorDataByApplicationId (@Req() request: Request, @Param() params: any, @Body() dogovorData: EditDogovorEnergoData) {
+        try {
+            return await this.applicationsService.editDogovorEnergoDataByApplicationId(request['user'], params.id, dogovorData)
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
     @Post(':id/edit')
-    async aditApplicationData(@Req() request: Request, @Param() params: any, @Body() applicationData: CreateApplication) {
+    async editApplicationData(@Req() request: Request, @Param() params: any, @Body() applicationData: CreateApplication) {
         try {
             return await this.applicationsService.editApplication(request['user'], params.id, applicationData)
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('application/:id')
+    async getApplicationById(@Req() request: Request, @Param() params: any) {
+        try {
+            return await this.applicationsService.getApplicationByIdForClient(request['user'], params.id)
         } catch (e) {
             console.log(e);
             return e
@@ -258,6 +345,17 @@ export class ApplicationsController {
     async getFilialsForApplication(@Req() request: Request) {
         try {
             return await this.applicationsService.getFilialsForApplication(request['user']);
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get(':id/workingFiles')
+    async getApplicationWorkingFiles(@Req() request: Request, @Param() params: any) {
+        try {
+            return await this.applicationsService.getApplicationWorkingDocs(request['user'], params.id);
         } catch (e) {
             console.log(e);
             return e
