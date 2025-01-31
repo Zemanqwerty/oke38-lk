@@ -33,29 +33,35 @@ export class MessagesController {
     @Post(':id/sendFiles')
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'files', maxCount: 5 },
-      ], {
+    ], {
         storage: diskStorage({
             destination: (req, file, callback) => {
-                console.log(123);
-              const user: Payload = req['user'];
-              const destination = `./messageFiles/${user.publickUserEmail}`;
-              fs.mkdirSync(destination, {recursive: true});
-              callback(null, destination);
+                const user: Payload = req['user'];
+                const destination = `./messageFiles/${user.publickUserEmail}`;
+                fs.mkdirSync(destination, { recursive: true });
+                callback(null, destination);
             },
             filename: (req, file, callback) => {
-              const uniqueSuffix = Date.now() + '-' + uuidv4();
-              callback(null, `${uniqueSuffix}__${file.originalname}`);
+                const uniqueSuffix = Date.now() + '-' + uuidv4();
+                callback(null, `${uniqueSuffix}__${file.originalname}`);
             },
-          })
-      })
-    )
+        }),
+        fileFilter: (req, file, callback) => {
+            // Разрешаем только изображения и PDF-документы
+            if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || 'image/jpg' || file.mimetype === 'application/pdf') {
+                callback(null, true);
+            } else {
+                callback(new Error('Unsupported file type'), false);
+            }
+        }
+    }))
     async create(@Req() request: Request, @UploadedFiles() files: MessagesFiles, @Body() fileData: MessagesFileData, @Param() params: any) {
         try {
             console.log(files);
             return await this.messagesService.saveMessagesFiles(files, fileData.userRole, fileData.user, params.id);
         } catch (e) {
             console.log(e);
-            return e
+            return e;
         }
     }
 }

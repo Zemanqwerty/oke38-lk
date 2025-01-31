@@ -58,12 +58,15 @@ export class MessagesService {
     }
 
     async saveMessagesFiles(files: MessagesFiles, userRole: Role, user: string, chatId: string) {
-        const chat = await this.chatService.getChatById(chatId);
+        let chat = await this.chatService.getChatById(chatId);
 
         if (!chat) {
-            await this.applicationService.getApplicationById(chatId).then((application) => {
-                this.chatService.createChat(application);
-            })
+            const application = await this.applicationService.getApplicationById(chatId);
+            if (application) {
+              chat = await this.chatService.createChat(application); // Обновляем переменную chat
+            } else {
+              throw new Error('Application not found'); // Обработка случая, если заявка не найдена
+            }
         }
 
         console.log(files);
@@ -99,6 +102,8 @@ export class MessagesService {
                 createdAt: 'ASC'
             }
         })
+
+        console.log(messages);
 
         return messages.map((message) => {
             return new ResponseMessages(message);
