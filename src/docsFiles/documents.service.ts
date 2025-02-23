@@ -12,6 +12,7 @@ import { Contract } from './contract.entity';
 import { DogovorFilesDto } from 'src/dtos/applications/DogovorFiles.dto';
 import { ContractDoc } from './contractdoc.entity';
 import { ContractSatatus } from './contractstatus.entity';
+import { ContractStatus } from 'src/dtos/applications/ContractStatus.dto';
 
 @Injectable()
 export class DocumentsService {
@@ -61,6 +62,40 @@ export class DocumentsService {
             skip,
             take
         });
+    }
+
+    async getContractStatusById1C(id1C: Buffer | null) {
+        if (!id1C) {
+            return null
+        }
+        
+        return await this.contractStatusRepository.findOne({
+            where: {
+                id_contractstatus_1c: id1C
+            }
+        })
+    }
+
+    async getAllContractStatus() {
+        const allContractStatuses = await this.contractStatusRepository.find();
+
+        return allContractStatuses.map((status) => {
+            return new ContractStatus(status);
+        })
+    }
+
+    async getContractStatusById(id: number) {
+        return await this.contractStatusRepository.findOne({
+            where: {
+                id_contractstatus: id
+            }
+        })
+    }
+
+    async getDogovorEnergoCount() {
+        const allDogovorEnergo = await this.dogovorenergoRepository.find();
+
+        return allDogovorEnergo.length;
     }
 
     async setDogovorFilesByApplication(application: Applications, files: DogovorFilesDto) {

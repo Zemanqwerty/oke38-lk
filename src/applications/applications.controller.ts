@@ -20,6 +20,7 @@ import { SetApplicationNumberStatus } from "src/dtos/applications/SetApplication
 import { MessagePattern, RmqContext, Payload as MicroservicesPayload, Ctx, EventPattern } from "@nestjs/microservices";
 import { EditDogovorEnergoData } from "src/dtos/applications/SetDogovorEnergo.dto";
 import { DogovorFilesDto } from "src/dtos/applications/DogovorFiles.dto";
+import { filter } from "rxjs";
 
 
 
@@ -297,12 +298,84 @@ export class ApplicationsController {
     }
 
     @UseGuards(AuthGuard)
-    @Get('all')
-    async getAllApplications(@Req() request: Request, @Query('page') page: number) {
+    @Get('count')
+    async getApplicationsCount(@Req() request: Request) {
         try {
-            return await this.applicationsService.getAllApplications(request['user'], page);
+            return await this.applicationsService.getApplicationsCount(request['user']);
+        } catch (e) {
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('applicationstatus')
+    async getAllApplicationStatus(@Req() request: Request) {
+        try {
+            return await this.applicationsService.getAllApplicationStatus(request['user']);
+        } catch (e) {
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('dogovorenergocount')
+    async getAllDogovorEnergoCount(@Req() request: Request) {
+        try {
+            return await this.applicationsService.getDogovorEnergoCount(request['user']);
+        } catch (e) {
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get(':id/setview')
+    async setView(@Req() request: Request, @Param() params: any) {
+        try {
+            return await this.applicationsService.setView(request['user'], params.id);
+        } catch (e) {
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('all')
+    async getAllApplications(
+        @Req() request: Request,
+        @Query('page') page: number,
+        @Query('address') address: string,
+        @Query('user') user: string,
+        @Query('filial') filial: string,
+        @Query('number') number: string,
+        @Query('vidrassrochki') vidrassrochki: number,
+        @Query('statusoplaty') statusoplaty: number,
+        @Query('applicationstatus') applicationstatus: number,
+        @Query('contractstatus') contractstatus: number,
+    ) {
+        try {
+            const filters = {
+                address,
+                user,
+                filial,
+                number,
+                vidrassrochki,
+                statusoplaty,
+                applicationstatus,
+                contractstatus
+            };
+            console.log(filters);
+            return await this.applicationsService.getAllApplications(request['user'], page, filters);
         } catch (e) {
             console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('allcontractstatuses')
+    async getAllContractStatuses(@Req() request: Request) {
+        try {
+            return await this.applicationsService.getAllContractStatuses();
+        } catch (e) {
             return e
         }
     }
@@ -319,12 +392,33 @@ export class ApplicationsController {
     }
 
     @UseGuards(AuthGuard)
+    @Get('vidrassrochki')
+    async getAllVidrassrochki(@Req() request: Request) {
+        try {
+            // console.log('--------------------------');
+            return await this.applicationsService.getAllVidrassrochki(request['user']);
+        } catch (e) {
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
     @Get('getStatuses')
     async getStatusesForApplications(@Req() request: Request) {
         try {
             return await this.applicationsService.getApplicationsStatuses(request['user']);
         } catch (e) {
             console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('statusoplaty')
+    async getAllStatusOplaty(@Req() request: Request) {
+        try {
+            return await this.applicationsService.getAllStatusOplaty(request['user']);
+        } catch (e) {
             return e
         }
     }

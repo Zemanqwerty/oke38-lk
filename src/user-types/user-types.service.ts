@@ -26,6 +26,10 @@ export class UserTypesService {
         });
     }
 
+    async getTypesList() {
+        return await this.userTypesRepository.find();
+    }
+
     async onModuleInit() {
         const userTypes = await this.userTypesRepository.find();
 

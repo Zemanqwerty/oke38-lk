@@ -28,11 +28,12 @@ export class Message {
   })
   fileName: string;
 
-  @Column()
-  senderRole: Role;
+  // @Column()
+  // senderRole: Role;
 
-  @Column()
-  sender: string;
+  @ManyToOne(() => Users, (user) => user.messages)
+  @JoinColumn({name: 'sender'})
+  sender: Users;
 
   @CreateDateColumn()
   createdAt: Date;

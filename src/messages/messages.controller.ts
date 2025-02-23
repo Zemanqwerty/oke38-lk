@@ -64,4 +64,26 @@ export class MessagesController {
             return e;
         }
     }
+
+    @UseGuards(AuthGuard)
+    @Get('last')
+    async getLastMessages() {
+        try {
+            return await this.messagesService.getLastMessages();
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('count')
+    async getAllMessagesCount() {
+        try {
+            await this.messagesService.getAllMessagesCount();
+        } catch (e) {
+            console.log(e);
+            return e
+        }
+    }
 }

@@ -54,6 +54,27 @@ import { OrderSource } from './ordersource.entity';
                 },
                 inject: [ConfigService],
             },
+            {
+                name: '1C_RPC',
+                useFactory: (configService: ConfigService) => {
+                    const user = configService.get('RABBITMQ_USER');
+                    const password = configService.get('RABBITMQ_PASSWORD');
+                    const host = configService.get('RABBITMQ_HOST');
+                    const queueName = configService.get('RABBITMQ_QUEUE_NAME_1C_GET_FILES');
+
+                    return {
+                        transport: Transport.RMQ,
+                        options: {
+                            urls: [`amqp://${user}:${password}@${host}`],
+                            queue: queueName,
+                            queueOptions: {
+                                durable: true,
+                            },
+                        },
+                    };
+                },
+                inject: [ConfigService],
+            },
         ]),
         ],
     providers: [ApplicationsService, FilesService, DocumentsModule],

@@ -1,4 +1,5 @@
 import { Applications } from "src/applications/applications.entity";
+import { StatusOplaty } from "src/applications/statusoplaty.entity";
 import { Users } from "src/users/users.entity";
 
 export class ApplicationsResponse {
@@ -27,16 +28,18 @@ export class ApplicationsResponse {
     yl_shortname: string | null;
     contact_familiya: string| null;
     filial?: string | null;
-
-
+    isViewed: boolean;
+    isFrom1c: boolean;
+    statusDogovora: string | null;
 
     constructor (model: Applications,
         urovenU: string | null,
         cenovayaCat: string | null,
         vidrassrochki: string | null,
         vidzayavki: string | null,
-        statusoplaty: string | null,
+        statusoplaty: StatusOplaty | null,
         statuszayavki: string | null,
+        statusDogovora: string | null,
         provider: string | null,
         reason: string | null)
     {
@@ -55,8 +58,9 @@ export class ApplicationsResponse {
         this.cenovayaCat = cenovayaCat;
         this.paymentOption = vidrassrochki;
         this.vidzayavki = vidzayavki;
-        this.ststusoplaty = statusoplaty;
-        this.status = statuszayavki;
+        this.ststusoplaty = statusoplaty == null ? null : statusoplaty.caption_long;
+        // this.status = statuszayavki;
+        this.status = model.status ? model.status.caption_zayavkastatus : null;
         this.address = model.address;
         this.provider = provider;
         this.reason = reason;
@@ -66,6 +70,9 @@ export class ApplicationsResponse {
         this.yl_shortname = model.user.yl_shortname;
         this.contact_familiya = model.user.contact_familiya;
         this.filial = model.filial ? model.filial.caption_filial : null;
+        this.isViewed = model.is_viewed;
+        this.isFrom1c = model.date_copy_from1c ? true : false;
+        this.statusDogovora = statusDogovora;
     }
 }
 

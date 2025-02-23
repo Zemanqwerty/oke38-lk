@@ -63,9 +63,24 @@ export class UsersController {
 
     @UseGuards(AuthGuard)
     @Get('admin/all')
-    async getAll(@Req() request: Request, @Query('page') page: number) {
+    async getAll(
+        @Req() request: Request,
+        @Query('page') page: number,
+        @Query('user') user: string,
+        @Query('email') email: string,
+        @Query('phone') phone: string,
+        @Query('type') type: number,
+        @Query('role') role: number,
+    ) {
         try {
-            return await this.usersService.getAll(page, request['user'])
+            const filters = {
+                user,
+                email,
+                phone,
+                type,
+                role
+            };
+            return await this.usersService.getAll(page, request['user'], filters)
         } catch (e) {
             console.log(e);
             return e
@@ -123,6 +138,36 @@ export class UsersController {
             return await this.usersService.adminDeleteUser(request['user'], deleteData)
         } catch (e) {
             console.log(e);
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('roles')
+    async getRolesList(@Req() request: Request) {
+        try {
+            return await this.usersService.adminGetRolesList(request['user'])
+        } catch (e) {
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('userscount')
+    async getAllUsersCount(@Req() request: Request) {
+        try {
+            return await this.usersService.getUsersCount(request['user'])
+        } catch (e) {
+            return e
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('types')
+    async getTypesList(@Req() request: Request) {
+        try {
+            return await this.usersService.adminGetTypesList(request['user'])
+        } catch (e) {
             return e
         }
     }

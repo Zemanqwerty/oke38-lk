@@ -18,6 +18,10 @@ export class UserRolesService {
         })
     }
 
+    async getRolesList() {
+        return await this.userRolesRepository.find();
+    }
+
     async onModuleInit() {
         const userRoles = await this.userRolesRepository.find();
         console.log(userRoles.length);

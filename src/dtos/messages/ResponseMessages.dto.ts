@@ -1,8 +1,8 @@
 import { Message } from "src/messages/messages.entity";
+import { AllUsersResponse } from "../users/AllUsersResponse";
 
 export class ResponseMessages {
-    user: string;
-    userRole: string;
+    user: AllUsersResponse;
     message: string | null;
     fileName: string | null;
     fileUrl: string | null;
@@ -11,8 +11,7 @@ export class ResponseMessages {
     constructor(model: Message) {
         this.message = model.messageText;
         this.room = model.chat.id.toString();
-        this.user = model.sender;
-        this.userRole = model.senderRole;
+        this.user = new AllUsersResponse(model.sender);
         this.fileName = model.fileName;
         this.fileUrl = model.fileUrl;
     }

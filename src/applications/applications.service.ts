@@ -40,7 +40,20 @@ import { EditDogovorEnergoData } from "src/dtos/applications/SetDogovorEnergo.dt
 import { ContractResponseDto } from "src/dtos/applications/ContractResponse.dto";
 import { DogovorFilesDto } from "src/dtos/applications/DogovorFiles.dto";
 import { ContractFilesDto } from "src/dtos/applications/ContractFiles.dto";
+import { VidRassrochkiDto } from "src/dtos/applications/Vidrassrochki.dto";
+import { StatusOplatyResponse } from "src/dtos/applications/StatusOplatyResponse.dto";
+import { ApplicationStatusResponse } from "src/dtos/applications/ApplicationStatus.dto";
+import * as fs from 'fs';
+import * as path from 'path';
+import { firstValueFrom } from "rxjs";
 
+interface RpcCallHeader {
+    Method: string;
+    BackQueueName: string;
+    Body: {
+      RpcParams: { [key: string]: string };
+    };
+  }
 
 @Injectable()
 export class ApplicationsService {
@@ -86,7 +99,8 @@ export class ApplicationsService {
         private chatService: ChatService,
         private filialService: FilialService,
 
-        @Inject('APPLICAITIONS_TO_1C_SERVICE') private application1cService: ClientProxy
+        @Inject('APPLICAITIONS_TO_1C_SERVICE') private application1cService: ClientProxy,
+        @Inject('1C_RPC') private clientRpc: ClientProxy,
     ) {};
 
     async getAllDogovorenergoForApplications(userData: Payload, pageNumber: number) {
@@ -214,6 +228,102 @@ export class ApplicationsService {
             return e
         } finally {
             this.application1cService.close();
+        }
+    }
+
+    async rpcFillAppFiles(appNumber: string): Promise<any> {
+        console.log('setting rpc header');
+        const rpcCallHeader = {
+            method: 'Query',
+            backQueueName: this.generateGuid(),
+            body: {
+                rpcQuery: `Выбрать tDoc.Ссылка КАК _IDRRef, NULL КАК DogStatus, tDoc.ИмяФайла КАК _Fld24758, tDoc.ВидФайла.Наименование КАК _Description, 
+                            ВидФайла.Код КАК VidDocCode, tDoc.ДатаЗаписи AS Z_DocDate, tDoc.Том.Путь КАК _Fld28469, tDoc.ПолныйПутьВТоме КАК _Fld28470, 
+                            tDoc.ИмяФайлаВТоме КАК _Fld28471, tDoc.РасширениеФайлаВТоме КАК _Fld28472 
+                            Из Справочник.удХранилище КАК tDoc 
+                            Внутреннее Соединение Документ.удЗаявка КАК З 
+                            По З.Ссылка = tDoc.Объект 
+                                И З.НомерЗаявки = &AppNumber 
+                            Левое Соединение Справочник.удВидыДокументовПриложенийКЗаявкам КАК tVidDoc 
+                            По tDoc.ВидФайла = tVidDoc.Ссылка 
+                            Где tDoc.ПометкаУдаления = Ложь И tVidDoc.ДоступенВЛК = Истина 
+                            Упорядочить По tDoc.ДатаЗаписи Убыв`,
+                rpcParams: {
+                    AppNumber: appNumber,
+                },
+            },
+        };
+        console.log('rpc request');
+        const response = await firstValueFrom(await this.clientRpc.send({ cmd: 'rpcCall' }, rpcCallHeader).toPromise());
+        console.log(response);
+        return this.parseResponse(response);
+    }
+
+    async rpcFillDogFiles(appNumber: string): Promise<any> {
+        console.log('setting rpc header');
+        const rpcCallHeader = {
+            method: 'Query',
+            backQueueName: this.generateGuid(),
+            body: {
+                rpcQuery: `Выбрать tDoc.Ссылка КАК _IDRRef, Д.СостояниеДоговораТП КАК DogStatus, tDoc.ИмяФайла КАК _Fld24758, tDoc.ВидФайла.Наименование КАК _Description, 
+                            ВидФайла.Код КАК VidDocCode, tDoc.ДатаЗаписи AS Z_DocDate, tDoc.Том.Путь КАК _Fld28469, tDoc.ПолныйПутьВТоме КАК _Fld28470, 
+                            tDoc.ИмяФайлаВТоме КАК _Fld28471, tDoc.РасширениеФайлаВТоме КАК _Fld28472 
+                            Из Справочник.удХранилище КАК tDoc 
+                            Внутреннее Соединение Документ.удДоговор КАК Д 
+                            По Д.Ссылка = tDoc.Объект 
+                            Внутреннее Соединение Документ.удЗаявка КАК З 
+                            По Д.Ссылка = З.ДокументДоговор 
+                                И З.НомерЗаявки = &Appnumber 
+                            Левое Соединение Справочник.удВидыДокументовПриложенийКЗаявкам КАК tVidDoc 
+                            По tDoc.ВидФайла = tVidDoc.Ссылка 
+                            Где tDoc.ПометкаУдаления = Ложь И tVidDoc.ДоступенВЛК = Истина 
+                            Упорядочить По tDoc.ДатаЗаписи Убыв`,
+                rpcParams: {
+                    AppNumber: appNumber,
+                },
+            },
+        };
+        console.log('rpc request');
+        const response = await firstValueFrom(await this.clientRpc.send({ cmd: 'rpcCall' }, rpcCallHeader).toPromise());
+        console.log(response);
+        return this.parseResponse(response);
+    }
+
+    async rpcFillDogInfo(appNumber: string): Promise<any> {
+        console.log('setting rpc header');
+        const rpcCallHeader = {
+            method: 'Query',
+            backQueueName: this.generateGuid(),
+            body: {
+                rpcQuery: `Выбрать Д.Ссылка КАК _IDRRef, Д.НомерДоговораИтоговый КАК D_1C_Nomer, Д.СостояниеДоговораТП КАК D_1C_Status, Д.ДатаДоговораИтоговая КАК D_1C_Data 
+                            Из Документ.удДоговор КАК Д
+                            Внутреннее Соединение Документ.удЗаявка КАК З
+                            По Д.Ссылка = З.ДокументДоговор И З.НомерЗаявки = &AppNumber`,
+                rpcParams: {
+                    AppNumber: appNumber,
+                },
+            },
+        };
+        console.log('rpc request');
+        const response = await firstValueFrom(await this.clientRpc.send({ cmd: 'rpcCall' }, rpcCallHeader).toPromise());
+        console.log(response);
+        return this.parseResponse(response);
+    }
+
+    private generateGuid(): string {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    private parseResponse(response: any): any {
+        console.log('parsing response');
+        try {
+            return JSON.parse(response);
+        } catch (e) {
+            console.error('Error parsing response:', e);
+            return null;
         }
     }
 
@@ -431,6 +541,12 @@ export class ApplicationsService {
                 caption_ordersource_short: 'ЛК'
             }
         })
+
+        const idZayavkastatus = await this.zayavkaStatusReposytory.findOne({
+            where: {
+                id_zayavkastatus: 1
+            }
+        })
         
         const newApplication = this.applicationsReposytory.create({
             id_zayavkatype: applicatyonType,
@@ -443,7 +559,10 @@ export class ApplicationsService {
             createdAt: new Date(),
             is_viewed: false,
             id_ordersource: orderSource,
-            maxPower: parseFloat(applicationData.maxPower)
+            maxPower: parseFloat(applicationData.maxPower),
+            paymantStatus: null,
+            status: idZayavkastatus,
+            v1c_statusdogovora: null,
         });
         newApplication.user = user;
         await this.applicationsReposytory.save(newApplication);
@@ -532,19 +651,26 @@ export class ApplicationsService {
             }
         })
 
-        const id1c_statusoplaty = await this.statusOplatyReposytory.findOne({
+        const statusDogovora = await this.documentsService.getContractStatusById1C(application.v1c_statusdogovora);
+
+        let id1c_statusoplaty = await this.statusOplatyReposytory.findOne({
             where: {
                 idrref: application.paymantStatus
             }
         })
+
+        if (application.paymantStatus == null) {
+            id1c_statusoplaty = null
+        }
 
         return new ApplicationsResponse(application,
                                         appliEnumUrovenU.caption_long,
                                         id1c_cenovayakategoriya.caption_long,
                                         appliPaymentsOption.caption_long,
                                         id1c_vidzayavki.caption_long,
-                                        id1c_statusoplaty.caption_long,
+                                        id1c_statusoplaty,
                                         v1c_statuszayavki.caption_zayavkastatus,
+                                        statusDogovora ? statusDogovora.caption_contractstatus : null,
                                         appliProvider.caption_gp,
                                         applicationReason.caption_long
         );
@@ -609,7 +735,29 @@ export class ApplicationsService {
             throw new HttpException('permission denied', HttpStatus.FORBIDDEN);
         }
 
+        // await this.rpcFillAppFiles(applicationId);
+        // await this.rpcFillDogFiles(applicationId);
+        // await this.rpcFillDogInfo(applicationId);
+
         return await this.documentsService.getFilesByApplication(applicationId);
+    }
+
+    async setView(userData: Payload, applicationUuid: string) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
+        }
+
+        const application = await this.applicationsReposytory.findOne({
+            where: {
+                id_zayavka: applicationUuid,
+            }
+        });
+
+        application.is_viewed = true;
+
+        return await this.applicationsReposytory.save(application);
     }
 
     // async getApplicationsByUser(userData: Payload) {
@@ -714,63 +862,6 @@ export class ApplicationsService {
         });
     
         const applicationResponses = await Promise.all(applications.map(async (application) => {
-            const [
-                id1c_enumurovenu,
-                id1c_cenovayakategoriya,
-                id1c_vidrassrochki,
-                id1c_vidzayavki,
-                id1c_statusoplaty,
-                v1c_statuszayavki,
-                appliProvider,
-                appliPrichinapodachi
-            ] = await Promise.all([
-                this.enumUReposytory.findOne({ where: { idrref: application.powerLevel } }),
-                this.cenKatReposytory.findOne({ where: { idrref: application.id1c_cenovayakategoriya } }),
-                this.vidRassrochkiReposytory.findOne({ where: { idrref: application.paymentsOption } }),
-                this.vidZayavkiReposytory.findOne({ where: { idrref: application.id1c_vidzayavki } }),
-                this.statusOplatyReposytory.findOne({ where: { idrref: application.paymantStatus } }),
-                this.zayavkaStatusReposytory.findOne({ where: { id_zayavkastatus_1c: application.v1c_statuszayavki } }),
-                this.gpRepository.findOne({ where: { id_gp: application.provider } }),
-                this.prichinaPodachiRepository.findOne({ where: { id_prichinapodachiz: application.reason } })
-            ]);
-    
-            return new ApplicationsResponse(
-                application,
-                id1c_enumurovenu?.caption_long,
-                id1c_cenovayakategoriya?.caption_long,
-                id1c_vidrassrochki?.caption_long,
-                id1c_vidzayavki?.caption_long,
-                id1c_statusoplaty?.caption_long,
-                v1c_statuszayavki?.caption_zayavkastatus,
-                appliProvider?.caption_gp,
-                appliPrichinapodachi?.caption_long
-            );
-        }));
-    
-        return applicationResponses;
-    }
-
-    async getAllApplications(userData: Payload, pageNumber: number) {
-        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
-    
-        if (user.id_userrole.caption_userrole !== Role.Admin) {
-            throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
-        }
-    
-        const skip = (pageNumber - 1) * 20;
-        const take = 20;
-    
-        const applications = await this.applicationsReposytory.find({
-            relations: {
-                user: true,
-                filial: true
-            },
-            order: { createdAt: 'DESC' },
-            skip,
-            take
-        });
-    
-        return Promise.all(applications.map(async (application) => {
             const id1c_enumurovenu = await this.enumUReposytory.findOne({
                 where: {
                     idrref: application.powerLevel
@@ -795,17 +886,186 @@ export class ApplicationsService {
                 }
             });
     
-            const id1c_statusoplaty = await this.statusOplatyReposytory.findOne({
+            let id1c_statusoplaty = await this.statusOplatyReposytory.findOne({
                 where: {
                     idrref: application.paymantStatus
                 }
             });
+
+            if (application.paymantStatus == null) {
+                id1c_statusoplaty = null
+            } 
     
             const v1c_statuszayavki = await this.zayavkaStatusReposytory.findOne({
                 where: {
                     id_zayavkastatus_1c: application.v1c_statuszayavki
                 }
             });
+    
+            const appliProvider = await this.gpRepository.findOne({
+                where: {
+                    id_gp: application.provider
+                }
+            });
+    
+            const appliPrichinapodachi = await this.prichinaPodachiRepository.findOne({
+                where: {
+                    id_prichinapodachiz: application.reason
+                }
+            });
+
+            const statusDogovora = await this.documentsService.getContractStatusById1C(application.v1c_statusdogovora);
+    
+            return new ApplicationsResponse(
+                application,
+                id1c_enumurovenu.caption_long,
+                id1c_cenovayakategoriya.caption_long,
+                id1c_vidrassrochki.caption_long,
+                id1c_vidzayavki.caption_long,
+                id1c_statusoplaty,
+                v1c_statuszayavki.caption_zayavkastatus,
+                statusDogovora ? statusDogovora.caption_contractstatus : null,
+                appliProvider.caption_gp,
+                appliPrichinapodachi.caption_long
+            );
+        }));
+    
+        return applicationResponses;
+    }
+
+    async getAllVidrassrochki(userData: Payload) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
+        }
+
+        const vidrassrochki = await this.vidRassrochkiReposytory.find();
+
+        return vidrassrochki.map((object) => {
+            return new VidRassrochkiDto(object);
+        });
+    }
+
+    async getAllApplications(userData: Payload, pageNumber: number, filters: any) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
+        }
+    
+        const skip = (pageNumber - 1) * 20;
+        const take = 20;
+    
+        const queryBuilder = this.applicationsReposytory.createQueryBuilder('application')
+        .leftJoinAndSelect('application.user', 'user')
+        .leftJoinAndSelect('application.filial', 'filial')
+        .leftJoinAndSelect('application.status', 'status')
+        // .leftJoinAndSelect('application.paymentsOption', 'vidrassrochki')
+        .orderBy('application.createdAt', 'DESC')
+        .skip(skip)
+        .take(take);
+
+    if (filters.address) {
+        queryBuilder.andWhere('application.v1c_adresepu LIKE :address', { address: `%${filters.address}%` });
+    }
+    if (filters.user) {
+        queryBuilder.andWhere(
+            '(user.lastname LIKE :user OR ' +
+            'user.firstname LIKE :user OR ' +
+            'user.surname LIKE :user OR ' +
+            'user.yl_fullname LIKE :user OR ' +
+            'user.yl_shortname LIKE :user)',
+            { user: `%${filters.user}%` }
+        );
+    }
+    if (filters.filial) {
+        queryBuilder.andWhere('filial.caption_filial LIKE :caption_filial', { caption_filial: `%${filters.filial}%` });
+    }
+    if (filters.number) {
+        queryBuilder.andWhere('application.applicationNumber LIKE :number', { number: `%${filters.number}%` });
+    }
+    if (filters.statusoplaty) {
+        const statusoplaty = await this.statusOplatyReposytory.findOne({
+            where: {
+                enumorder: filters.statusoplaty
+            }
+        });
+
+        console.log(statusoplaty);
+
+        const statusString = statusoplaty.idrref.toString('hex');
+        console.log(statusString);
+
+        queryBuilder.andWhere(`encode(application.paymantStatus, 'hex') LIKE :status`, { status: `%${statusString}%` });
+    }
+    if (filters.contractstatus) {
+        const contractstatus = await this.documentsService.getContractStatusById(filters.contractstatus);
+        const statusString = contractstatus.id_contractstatus_1c.toString('hex');
+
+        queryBuilder.andWhere(`encode(application.v1c_statusdogovora, 'hex') LIKE :status`, { status: `%${statusString}%` });
+    }
+    if (filters.vidrassrochki) {
+        const vidrassrochki = await this.vidRassrochkiReposytory.findOne({
+            where: {
+                enumorder: filters.vidrassrochki
+            }
+        })
+        // console.log(vidrassrochki);
+        queryBuilder.andWhere('application.paymentsOption LIKE :vidrassrochki', { vidrassrochki: `%${vidrassrochki.idrref}%` });
+    }
+    if (filters.applicationstatus) {
+        queryBuilder.andWhere('application.status.id_zayavkastatus = :applicationstatus', { applicationstatus: filters.applicationstatus });
+    }
+
+    const applications = await queryBuilder.getMany();
+    // console.log(applications);
+    
+        return Promise.all(applications.map(async (application) => {
+
+            console.log(application.v1c_statusdogovora);
+            const id1c_enumurovenu = await this.enumUReposytory.findOne({
+                where: {
+                    idrref: application.powerLevel
+                }
+            });
+    
+            const id1c_cenovayakategoriya = await this.cenKatReposytory.findOne({
+                where: {
+                    idrref: application.id1c_cenovayakategoriya
+                }
+            });
+    
+            const id1c_vidrassrochki = await this.vidRassrochkiReposytory.findOne({
+                where: {
+                    idrref: application.paymentsOption
+                }
+            });
+    
+            const id1c_vidzayavki = await this.vidZayavkiReposytory.findOne({
+                where: {
+                    idrref: application.id1c_vidzayavki
+                }
+            });
+    
+            let id1c_statusoplaty = await this.statusOplatyReposytory.findOne({
+                where: {
+                    idrref: application.paymantStatus
+                }
+            });
+
+            if (application.paymantStatus == null) {
+                id1c_statusoplaty = null
+            } 
+    
+            const v1c_statuszayavki = await this.zayavkaStatusReposytory.findOne({
+                where: {
+                    id_zayavkastatus_1c: application.v1c_statuszayavki
+                }
+            });
+
+            // console.log(application.v1c_statusdogovora);
+            const statusDogovora = await this.documentsService.getContractStatusById1C(application.v1c_statusdogovora);
     
             const appliProvider = await this.gpRepository.findOne({
                 where: {
@@ -825,12 +1085,95 @@ export class ApplicationsService {
                 id1c_cenovayakategoriya.caption_long,
                 id1c_vidrassrochki.caption_long,
                 id1c_vidzayavki.caption_long,
-                id1c_statusoplaty.caption_long,
+                id1c_statusoplaty,
                 v1c_statuszayavki.caption_zayavkastatus,
+                statusDogovora ? statusDogovora.caption_contractstatus : null,
                 appliProvider.caption_gp,
                 appliPrichinapodachi.caption_long
             );
         }));
+    }
+
+    public async getAllContractStatuses() {
+        return await this.documentsService.getAllContractStatus();
+    }
+
+    public async get1CFile(fileinfo: { Volume: string; PathInVol: string }): Promise<string> {
+        if (!fileinfo.Volume || !fileinfo.PathInVol) {
+          return '';
+        }
+    
+        try {
+          const rpcCallHeader: RpcCallHeader = {
+            Method: 'Get1CFile',
+            BackQueueName: '', // Не требуется для Nest.js RMQ
+            Body: {
+              RpcParams: {
+                Volume: fileinfo.Volume,
+                PathInVol: fileinfo.PathInVol,
+              },
+            },
+          };
+    
+          // Отправляем запрос через RabbitMQ
+          const response = await this.clientRpc.send('get_1c_file', rpcCallHeader).toPromise();
+    
+          if (response && response.data) {
+            const fileBuffer = Buffer.from(response.data, 'base64');
+    
+            if (fileBuffer.length > 0) {
+              // Сохраняем файл во временную директорию
+              const tempFilePath = path.join(
+                path.resolve('./tmp'),
+                `${Date.now()}_${Math.random().toString(36).substring(2)}.tmp`,
+              );
+              await fs.promises.writeFile(tempFilePath, fileBuffer);
+              return tempFilePath;
+            }
+          }
+    
+          return ''; // Файл не найден
+        } catch (error) {
+          console.error('Ошибка при получении файла:', error);
+          return '';
+        }
+      }
+    
+
+    async getAllApplicationStatus(userData: Payload) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
+        }
+
+        const statuses = await this.zayavkaStatusReposytory.find();
+
+        return statuses.map((status) => {
+            return new ApplicationStatusResponse(status);
+        })
+    }
+
+    async getApplicationsCount(userData: Payload) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
+        }
+
+        const applications = await this.applicationsReposytory.find();
+
+        return applications.length;
+    }
+
+    async getDogovorEnergoCount(userData: Payload) {
+        const user = await this.usersService.getActivatedUserByEmail(userData.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
+        }
+
+        return await this.documentsService.getDogovorEnergoCount();
     }
 
     async getApplicationById(id: string) {
@@ -882,11 +1225,15 @@ export class ApplicationsService {
             }
         })
 
-        const id1c_statusoplaty = await this.statusOplatyReposytory.findOne({
+        let id1c_statusoplaty = await this.statusOplatyReposytory.findOne({
             where: {
                 idrref: application.paymantStatus
             }
         })
+
+        if (application.paymantStatus == null) {
+            id1c_statusoplaty = null
+        }
 
         const v1c_statuszayavki = await this.zayavkaStatusReposytory.findOne({
             where: {
@@ -906,15 +1253,17 @@ export class ApplicationsService {
             }
         })
 
-        console.log(new ApplicationsResponse(application,
-            id1c_enumurovenu.caption_long,
-            id1c_cenovayakategoriya.caption_long,
-            id1c_vidrassrochki.caption_long,
-            id1c_vidzayavki.caption_long,
-            id1c_statusoplaty.caption_long,
-            v1c_statuszayavki.caption_zayavkastatus,
-            appliProvider.caption_gp,
-            appliPrichinapodachi.caption_long))
+        const statusDogovora = await this.documentsService.getContractStatusById1C(application.v1c_statusdogovora);
+
+        // console.log(new ApplicationsResponse(application,
+        //     id1c_enumurovenu.caption_long,
+        //     id1c_cenovayakategoriya.caption_long,
+        //     id1c_vidrassrochki.caption_long,
+        //     id1c_vidzayavki.caption_long,
+        //     id1c_statusoplaty.caption_long,
+        //     v1c_statuszayavki.caption_zayavkastatus,
+        //     appliProvider.caption_gp,
+        //     appliPrichinapodachi.caption_long))
 
         return new ApplicationsResponse(
             application,
@@ -922,11 +1271,26 @@ export class ApplicationsService {
             id1c_cenovayakategoriya.caption_long,
             id1c_vidrassrochki.caption_long,
             id1c_vidzayavki.caption_long,
-            id1c_statusoplaty.caption_long,
+            id1c_statusoplaty,
             v1c_statuszayavki.caption_zayavkastatus,
+            statusDogovora ? statusDogovora.caption_contractstatus : null,
             appliProvider.caption_gp,
             appliPrichinapodachi.caption_long
         );
+    }
+
+    async getAllStatusOplaty(userData: Payload) {
+        const user = await this.usersService.getUserByEmail(userData.publickUserEmail);
+
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+            throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY)
+        };
+
+        const statuses = await this.statusOplatyReposytory.find();
+
+        return statuses.map((status) => {
+            return new StatusOplatyResponse(status);
+        })
     }
 
     async getFilialsForApplication(userData: Payload) {

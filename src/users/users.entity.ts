@@ -5,6 +5,7 @@ import { UserRoles } from '../user-roles/user-roles.entity';
 import { UserTypes } from '../user-types/user-types.entity';
 import { JoinColumn, ManyToMany, ManyToOne, JoinTable, Entity, Column, PrimaryGeneratedColumn, Generated, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Documents } from '../docsFiles/documents.entity';
+import { Message } from '../messages/messages.entity';
 
 @Entity({
   name: 'tbluserinfo'
@@ -182,4 +183,7 @@ export class Users {
 
   @OneToMany(() => Documents, (docs) => docs.id_user, {cascade: true})
   documents: Documents[]
+
+  @OneToMany(() => Message, (message) => message.sender, {cascade: true})
+  messages: Message[]
 }

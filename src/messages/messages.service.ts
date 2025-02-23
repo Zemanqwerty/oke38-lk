@@ -18,6 +18,7 @@ import { ApplicationsService } from "src/applications/applications.service";
 import { ResponseMessages } from "src/dtos/messages/ResponseMessages.dto";
 import { MessagesFiles } from "src/dtos/messages/messagesFiles.dto";
 import { ChatGateway } from "./messages.gateway";
+import { LastMesages } from "src/dtos/messages/LastMessages.dto";
 
 
 @Injectable()
@@ -25,12 +26,13 @@ export class MessagesService {
     constructor(
         private chatService: ChatService,
         private applicationService: ApplicationsService,
+        private usersService: UsersService,
         private messageGateway: ChatGateway,
         @InjectRepository(Message)
         private messageRepository: Repository<Message>,
     ) {};
 
-    async createMessage(message: string, userRole: Role, user: string, chatId: string) {
+    async createMessage(message: string, userRole: Role, userEmail: string, chatId: string) {
         let chat = await this.chatService.getChatById(chatId);
         console.log(chatId);
 
@@ -47,9 +49,11 @@ export class MessagesService {
         console.log(chat);
         console.log('--');
 
+        const user = await this.usersService.getActivatedUserByEmail(userEmail);
+
         const newMessage = this.messageRepository.create({
             messageText: message,
-            senderRole: userRole,
+            // senderRole: userRole,
             sender: user,
             chat: chat,
         });
@@ -57,7 +61,7 @@ export class MessagesService {
         return await this.messageRepository.save(newMessage);
     }
 
-    async saveMessagesFiles(files: MessagesFiles, userRole: Role, user: string, chatId: string) {
+    async saveMessagesFiles(files: MessagesFiles, userRole: Role, userEmail: string, chatId: string) {
         let chat = await this.chatService.getChatById(chatId);
 
         if (!chat) {
@@ -71,11 +75,13 @@ export class MessagesService {
 
         console.log(files);
 
+        const user = await this.usersService.getActivatedUserByEmail(userEmail)
+
         return files.files.map(async (file) => {
             const newFile = this.messageRepository.create({
                 fileName: file.filename,
                 fileUrl: file.path,
-                senderRole: userRole,
+                // senderRole: userRole,
                 sender: user,
                 chat: chat
             })
@@ -89,7 +95,10 @@ export class MessagesService {
     async getAllMessagesInChat(chatId: string) {
         const messages = await this.messageRepository.find({
             relations: {
-                chat: true
+                chat: true,
+                sender: {
+                    id_userrole: true
+                }
             },
             where: {
                 chat: {
@@ -108,5 +117,33 @@ export class MessagesService {
         return messages.map((message) => {
             return new ResponseMessages(message);
         })
+    }
+
+    async getLastMessages() {
+        const messages = await this.messageRepository.createQueryBuilder('message')
+        .leftJoinAndSelect('message.sender', 'sender')
+        .leftJoinAndSelect('sender.id_userrole', 'userRole')
+        .leftJoinAndSelect('message.chat', 'chat')
+        .leftJoinAndSelect('chat.application', 'application')
+        .leftJoinAndSelect('application.filial', 'filial')
+        .where('sender.id_userrole.id_userrole = :caption_userrole', { caption_userrole: 0 })
+        .orderBy('message.createdAt', 'DESC')
+        .getMany();
+
+        return messages.map((message) => {
+            return new LastMesages(message);
+        })
+    }
+
+    async getAllMessagesCount() {
+        const messages = await this.messageRepository.createQueryBuilder('message')
+        .leftJoinAndSelect('message.sender', 'sender')
+        .leftJoinAndSelect('sender.id_userrole', 'userRole')
+        .where('sender.id_userrole.id_userrole = :caption_userrole', { caption_userrole: 0 })
+        .getMany();
+
+        // console.log(messages.length);
+
+        return messages.length;
     }
 }

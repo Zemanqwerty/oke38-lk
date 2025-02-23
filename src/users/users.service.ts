@@ -17,6 +17,9 @@ import { SetUserData } from "src/dtos/users/SetUserData.dto";
 import { UserRolesService } from "src/user-roles/user-roles.service";
 import { UserTypesService } from "src/user-types/user-types.service";
 import { FilialService } from "src/filials/filials.service";
+// import { UsersRelationsResponse } from "src/dtos/users/UsersRelationsResponse";
+import { UserRolesResponse } from "src/dtos/users/UserRolesResponse";
+import { UserTypesResponse } from "src/dtos/users/UserTypesResponse";
 
 
 @Injectable()
@@ -31,7 +34,7 @@ export class UsersService {
     ) {};
 
     async createNewUser(userData: CreateUser, ip: string): Promise<ResponseUser> {
-        console.log(ip);
+        // console.log(ip);
         const condidate = await this.usersRepository.findOne({where: {
             email: userData.email,
             isActive: true
@@ -150,7 +153,7 @@ export class UsersService {
         return {message: 'Устоновлен новый пароль'};
     }
 
-    async getAll(pageNumber: number, userData: Payload) {
+    async getAll(pageNumber: number, userData: Payload, filters: any) {
         const user = await this.getActivatedUserByEmail(userData.publickUserEmail);
 
         if (user.id_userrole.caption_userrole !== Role.Admin) {
@@ -160,22 +163,96 @@ export class UsersService {
         const skip = (pageNumber - 1) * 20;
         const take = 20;
 
-        const users = await this.usersRepository.find({
-            relations: {
-                id_userrole: true,
-                id_usertype: true,
-                id_filial: true
-            },
-            where: {
-                isActive: true
-            },
-            order: { date_create_user: 'DESC' },
-            skip,
-            take
-        })
+        // const users = await this.usersRepository.find({
+        //     relations: {
+        //         id_userrole: true,
+        //         id_usertype: true,
+        //         id_filial: true
+        //     },
+        //     where: {
+        //         isActive: true
+        //     },
+        //     order: { date_create_user: 'DESC' },
+        //     skip,
+        //     take
+        // })
+
+        const queryBuilder = this.usersRepository.createQueryBuilder('user')
+        .leftJoinAndSelect('user.id_userrole', 'id_userrole')
+        .leftJoinAndSelect('user.id_usertype', 'id_usertype')
+        .leftJoinAndSelect('user.id_filial', 'id_filial')
+        // .leftJoinAndSelect('application.paymentsOption', 'vidrassrochki')
+        .orderBy('user.date_create_user', 'DESC')
+        .skip(skip)
+        .take(take);
+
+        if (filters.user) {
+            queryBuilder.andWhere(
+                '(user.lastname LIKE :user OR ' +
+                'user.firstname LIKE :user OR ' +
+                'user.surname LIKE :user OR ' +
+                'user.yl_fullname LIKE :user OR ' +
+                'user.yl_shortname LIKE :user)',
+                { user: `%${filters.user}%` }
+            );
+        }
+        if (filters.type) {
+            queryBuilder.andWhere('id_usertype.id_usertype = :type', { type: filters.type });
+        }
+        if (filters.role) {
+            queryBuilder.andWhere('id_userrole.id_userrole = :role', { role: filters.role });
+        }
+        if (filters.email) {
+            queryBuilder.andWhere('user.email LIKE :email', { email: `%${filters.email}%` });
+        }
+        if (filters.phone) {
+            queryBuilder.andWhere('user.phoneNumber LIKE :phone', { phone: `%${filters.phone}%` });
+        }
+
+        const users = await queryBuilder.getMany();
 
         return users.map((oneUser) => {
             return new AllUsersResponse(oneUser);
+        })
+    }
+
+    async getUsersCount(userData: Payload) {
+        const user = await this.getUserByEmail(userData.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+          throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY);
+        }
+
+        const users = await this.usersRepository.find();
+
+        return users.length;
+    }
+
+    async adminGetRolesList(userData: Payload) {
+        const user = await this.getUserByEmail(userData.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+          throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY);
+        }
+
+        const roles = await this.userRolesService.getRolesList();
+
+        return roles.map((role) => {
+            return new UserRolesResponse(role);
+        })
+    }
+
+    async adminGetTypesList(userData: Payload) {
+        const user = await this.getUserByEmail(userData.publickUserEmail);
+    
+        if (user.id_userrole.caption_userrole !== Role.Admin) {
+          throw new HttpException('permission denied', HttpStatus.BAD_GATEWAY);
+        }
+
+        const types = await this.userTypesService.getTypesList();
+
+        return types.map((type) => {
+            return new UserTypesResponse(type);
         })
     }
 

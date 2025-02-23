@@ -22,6 +22,7 @@ export class AllUsersResponse {
     createdAt: Date | null;
 
     constructor (model: Users) {
+        // console.log(model.id_userrole);
         this.type = model.id_usertype ? model.id_usertype.caption_usertype : null
         this.lastname = model.lastname
         this.firstname = model.firstname

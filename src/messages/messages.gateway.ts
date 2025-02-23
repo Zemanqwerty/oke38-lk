@@ -8,12 +8,14 @@ import { Role } from 'src/roles/roles.enum';
 import { Message } from './messages.entity';
 import { Repository } from "typeorm";
 import { ResponseMessages } from 'src/dtos/messages/ResponseMessages.dto';
+import { UsersService } from 'src/users/users.service';
 
 @WebSocketGateway({ cors: true })
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private applicationService: ApplicationsService,
     private chatService: ChatService,
+    private userService: UsersService,
     // private messageService: MessagesService,
     @InjectRepository(Message)
     private messageRepository: Repository<Message>,
@@ -60,7 +62,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     this.server.to(room).emit('message', message); 
   }
 
-  async createMessage(message: string, userRole: Role, user: string, chatId: string) {
+  async createMessage(message: string, userRole: Role, userEmail: string, chatId: string) {
     let chat = await this.chatService.getChatById(chatId);
     console.log(chatId);
 
@@ -73,9 +75,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         }
     }
 
+    const user = await this.userService.getActivatedUserByEmail(userEmail)
+
       const newMessage = this.messageRepository.create({
           messageText: message,
-          senderRole: userRole,
           sender: user,
           chat: chat,
       });
