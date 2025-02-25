@@ -735,9 +735,9 @@ export class ApplicationsService {
             throw new HttpException('permission denied', HttpStatus.FORBIDDEN);
         }
 
-        // await this.rpcFillAppFiles(applicationId);
-        // await this.rpcFillDogFiles(applicationId);
-        // await this.rpcFillDogInfo(applicationId);
+        await this.rpcFillAppFiles(applicationId);
+        await this.rpcFillDogFiles(applicationId);
+        await this.rpcFillDogInfo(applicationId);
 
         return await this.documentsService.getFilesByApplication(applicationId);
     }
